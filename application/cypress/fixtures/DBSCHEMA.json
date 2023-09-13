@@ -1,0 +1,13 @@
+db.users.updateOne({ name: "Hueso Skywalker" }, { $set: { "address": { "phone": null, "address": "", "city": "", "province": "", "zip": null, "country": "" }, "backgroundImage": "https://lh3.googleusercontent.com/a/AGNmyxYqIu-2gZqkkUDXAM7HdlxT6fObEPu15_zPuvU=s96-c", "biography": "", "blog": { "myBlog": [], "likes": [], "commented": [], "rePosts": [] }, "location": "", "myEvents": { "_id": "", "created": [], "collection": [], "likes": [] }, "shopify": { "customerAccessToken": "", "customerId": "" }, "followers": [], "follows": [] }})
+
+db.users.updateOne({ name: "Agustin Lavezzari" }, { $set: { "address": { "phone": null, "address": "", "city": "", "province": "", "zip": null, "country": "" }, "backgroundImage": "https://lh3.googleusercontent.com/a/AGNmyxYqIu-2gZqkkUDXAM7HdlxT6fObEPu15_zPuvU=s96-c", "biography": "", "blog": { "myBlog": [], "likes": [], "commented": [], "rePosts": [] }, "location": "", "myEvents": { "_id": "", "created": [], "collection": [], "likes": [] }, "shopify": { "customerAccessToken": "", "customerId": "" }, "followers": [], "follows": [] }})
+
+// Checkout, after customer
+db.users.updateOne({ name: "Hueso Skywalker" }, { $set: {  "myEvents": { "_id": "", "created": [], "collection": [], "likes": [] },  }})
+
+// shopify { undefined }
+db.users.updateOne({ name: "Hueso Skywalker" }, { $set: { "address": { "phone": null, "address": "", "city": "", "province": "", "zip": null, "country": "" }, "image": "test.jpg", "backgroundImage": "test.jpg", "biography": "Rookie viper", "blog": { "myBlog": [], "likes": [], "commented": [], "rePosts": [] }, "location": "Planet Earth", "myEvents": { "_id": "", "created": [], "collection": [], "likes": [] }, "shopify": { "customerAccessToken": undefined, "customerId": undefined }, "followers": [], "follows": [] }})
+db.users.updateOne({ name: "Agustin Lavezzari" }, { $set: { "address": { "phone": null, "address": "", "city": "", "province": "", "zip": null, "country": "" }, "image": "test.jpg", "backgroundImage": "test.jpg", "biography": "Rookie viper", "blog": { "myBlog": [], "likes": [], "commented": [], "rePosts": [] }, "location": "Planet Earth", "myEvents": { "_id": "", "created": [], "collection": [], "likes": [] }, "shopify": { "customerAccessToken": undefined, "customerId": undefined }, "followers": [], "follows": [] }})
+
+db.users.updateOne({ name: "Agustin Lavezzari"}, { $set:{ "blog": { myBlog: [{ _id: ObjectId("64601efa73efc0328948e53f"), content: "Tamo' cerca panadero", likes: [], comments: [], rePosts: [],timestamp: 1684020986442}] }} })
+               

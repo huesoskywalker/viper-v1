@@ -1,0 +1,19 @@
+{
+    "user": {
+        "name": " ",
+        "email": "",
+        "image": "",
+        "_id": "",
+        "location": "",
+        "address": {
+            "phone": "",
+            "address": "",
+            "city": "",
+            "province": "",
+            "zip": "",
+            "country": ""
+        },
+        "customerAccessToken": ""
+    },
+    "expires": ""
+}

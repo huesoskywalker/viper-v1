@@ -1,0 +1,31 @@
+{
+    "name": "express-subscriptions",
+    "version": "1.0.0",
+    "main": "index.js",
+    "author": "huesoskywalker <agustinbigoni@gmail.com>",
+    "license": "MIT",
+    "scripts": {
+        "dev": "nodemon src/index.ts"
+    },
+    "dependencies": {
+        "@apollo/server": "^4.7.5",
+        "@graphql-tools/schema": "^10.0.0",
+        "cors": "^2.8.5",
+        "dotenv": "^16.3.1",
+        "express": "^4.18.2",
+        "graphql": "^16.7.1",
+        "graphql-mongodb-subscriptions": "^1.0.0",
+        "graphql-subscriptions": "^2.0.0",
+        "graphql-tag": "^2.12.6",
+        "graphql-ws": "^5.14.0",
+        "mongodb": "^5.7.0",
+        "ts-node": "^10.9.1",
+        "ws": "^8.13.0"
+    },
+    "devDependencies": {
+        "@types/cors": "^2.8.13",
+        "@types/ws": "^8.5.5",
+        "nodemon": "^3.0.1",
+        "typescript": "^5.1.6"
+    }
+}

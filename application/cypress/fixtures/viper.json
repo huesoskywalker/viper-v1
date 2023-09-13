@@ -1,0 +1,116 @@
+// {
+//     "address": {
+//         "phone": null,
+//         "address": "",
+//         "city": "",
+//         "province": "",
+//         "zip": null,
+//         "country": ""
+//     },
+//     "backgroundImage": "",
+//     "biography": "",
+//     "blog": {
+//         "myBlog": [],
+//         "likes": [],
+//         "commented": [],
+//         "rePosts": []
+//     },
+//     "location": "",
+//     "shopify": {},
+//     "myEvents": {},
+//     "followers": [],
+//     "follows": []
+// }
+
+{
+    "_id": "",
+    "address": {
+        "phone": null,
+        "address": "",
+        "city": "",
+        "province": "",
+        "zip": null,
+        "country": ""
+    },
+    "backgroundImage": "",
+    "biography": "",
+    "blog": {
+        "myBlog": [
+            {
+                "_id": "",
+                "content": "",
+                "likes": [
+                    {
+                        "_id": ""
+                    }
+                ],
+                "comments": [],
+                "rePosts": [],
+                "timestamp": null
+            }
+        ],
+        "likes": [
+            {
+                "bloggerId": "",
+                "blogId": "",
+                "viperId": "",
+                "timestamp": null
+            }
+        ],
+        "commented": [
+            {
+                "bloggerId": "",
+                "blogId": "",
+                "viperId": "",
+                "comment": "",
+                "timestamp": null
+            }
+        ],
+        "rePosts": [
+            {
+                "bloggerId": "",
+                "blogId": "",
+                "viperId": "",
+                "timestamp": null
+            }
+        ]
+    },
+    "email": "",
+    "emailVerified": null,
+    "name": "",
+    "image": "",
+    "location": "",
+    "shopify": {
+        "customerAccessToken": "",
+        "customerId": ""
+    },
+    "myEvents": {
+        "_id": "",
+        "created": [
+            {
+                "_id": ""
+            }
+        ],
+        "collection": [
+            {
+                "_id": "",
+                "checkoutId": ""
+            }
+        ],
+        "likes": [
+            {
+                "_id": ""
+            }
+        ]
+    },
+    "followers": [
+        {
+            "_id": ""
+        }
+    ],
+    "follows": [
+        {
+            "_id": ""
+        }
+    ]
+}

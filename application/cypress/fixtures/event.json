@@ -1,0 +1,46 @@
+{
+    "_id": "",
+    "organizer": {
+        "id": "",
+        "name": "",
+        "email": "",
+        "image": ""
+    },
+    "title": "",
+    "content": "",
+    "location": "",
+    "address": "",
+    "date": "2023-04-09T10:15:06.912Z",
+    "category": "",
+    "creationDate": 0,
+    "image": "",
+    "price": 0,
+    "entries": 0,
+    "participants": [
+        {
+            "_id": ""
+        }
+    ],
+    "editionDate": 0,
+    "likes": [
+        {
+            "_id": ""
+        }
+    ],
+    "comments": [
+        {
+            "_id": "",
+            "eventTitle": "",
+            "viperId": "",
+            "text": "",
+            "likes": [
+                {
+                    "_id": ""
+                }
+            ],
+            "replies": [],
+            "timestamp": 0
+        }
+    ],
+    "productId": ""
+}
