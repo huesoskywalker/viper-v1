@@ -7,33 +7,38 @@ import OrganizerInfo from "./OrganizerInfo"
 import { Event } from "@/types/event"
 import { getCurrentViper } from "@/lib/session"
 import { Session } from "next-auth"
-import { getEventById, preloadIsViperOnTheList } from "@/lib/events"
+import { preloadIsViperOnTheList } from "@/lib/events"
 import { preloadViperBasicProps, preloadIsViperParticipationRequest } from "@/lib/vipers"
 import { preloadIsCheckoutFulfilled } from "../../../helpers/isCheckoutFulFilled"
 import { AddLike } from "./AddLike"
 import AddComment from "./AddComment"
-import axios, { AxiosResponse } from "axios"
 
 export async function Event({ eventId }: { eventId: string }): Promise<JSX.Element> {
     const likedCookie: string = cookies().get("_is_liked")?.value || "none"
     const viperPromise: Promise<Session | null> = getCurrentViper()
-    // const eventPromise: Promise<Event | null> = getEventById(eventId)
-    const eventPromise: Promise<AxiosResponse<Event>> = axios.get<Event>(`/api/event/${eventId}`)
 
-    const [viperSession, selectedEvent] = await Promise.all([viperPromise, eventPromise])
+    const eventPromise: Promise<Response> = fetch(`/api/event/${eventId}`, {
+        method: "GET",
+        headers: {
+            "content-type": "application/json; charset=utf-8",
+        },
+    })
+
+    const [viperSession, selectedEventData] = await Promise.all([viperPromise, eventPromise])
     if (!viperSession)
         return <div className="text-yellow-400 text-sm"> remove this from Event</div>
     // Gotta handle this better
     // throw new Error(`No viper bro`)
-    const selectedEventData = selectedEvent.data
+    const selectedEvent: Event = await selectedEventData.json()
+    // const selectedEvent = selectedEvent
     if (!selectedEvent) return <div className="text-yellow-400 text-sm">Build up, from Event</div>
     const viperId: string = viperSession.user._id
-    preloadViperBasicProps(selectedEventData.organizer._id)
+    preloadViperBasicProps(selectedEvent.organizer._id)
     preloadIsViperOnTheList(eventId, viperId)
     preloadIsViperParticipationRequest(viperId, eventId)
     preloadIsCheckoutFulfilled(viperId, eventId)
 
-    const selectedEventAddress = selectedEventData.location.address
+    const selectedEventAddress = selectedEvent.location.address
 
     return (
         <div className="grid grid-cols-4 gap-6">
@@ -41,12 +46,12 @@ export async function Event({ eventId }: { eventId: string }): Promise<JSX.Eleme
                 <div className="space-y-2">
                     <Image
                         data-test="event-image"
-                        alt={selectedEventData.title}
-                        src={selectedEventData.image}
+                        alt={selectedEvent.title}
+                        src={selectedEvent.image}
                         width={200}
                         height={200}
                         placeholder="blur"
-                        blurDataURL={selectedEventData.image}
+                        blurDataURL={selectedEvent.image}
                         quality={100}
                         style={{
                             objectFit: "cover",
@@ -63,13 +68,13 @@ export async function Event({ eventId }: { eventId: string }): Promise<JSX.Eleme
                     data-test="event-title"
                     className="truncate text-xl font-medium text-white lg:text-2xl"
                 >
-                    {selectedEventData.title}
+                    {selectedEvent.title}
                 </div>
                 <div
                     data-test="event-content"
                     className="xl:text-sm lg:text-xs bg-gray-800/80 p-2 rounded-xl text-gray-100"
                 >
-                    {selectedEventData.content}
+                    {selectedEvent.content}
                 </div>
                 <div
                     data-test="event-address"
@@ -99,17 +104,17 @@ export async function Event({ eventId }: { eventId: string }): Promise<JSX.Eleme
                     <EventInfo
                         currentViper={viperSession}
                         eventId={eventId}
-                        eventDate={selectedEventData.date as string}
+                        eventDate={selectedEvent.date as string}
                         eventProvince={selectedEventAddress.province}
                         eventCountry={selectedEventAddress.country}
-                        eventPrice={selectedEventData.price}
-                        product={selectedEventData.product}
-                        eventEntries={selectedEventData.entries}
+                        eventPrice={selectedEvent.price}
+                        product={selectedEvent.product}
+                        eventEntries={selectedEvent.entries}
                     />
                 </Suspense>
             </div>
             <div className="mt-2 col-start-1 col-span-2 max-h-auto">
-                <ShowViper viperName={selectedEventData.organizer.name} event={true} blog={true}>
+                <ShowViper viperName={selectedEvent.organizer.name} event={true} blog={true}>
                     <Suspense
                         fallback={
                             <div className="text-yellow-500 text-lg">suspense from event...</div>
@@ -117,8 +122,8 @@ export async function Event({ eventId }: { eventId: string }): Promise<JSX.Eleme
                     >
                         {/* @ts-expect-error Async Server Component */}
                         <OrganizerInfo
-                            key={selectedEventData.organizer._id}
-                            organizerId={selectedEventData.organizer._id}
+                            key={selectedEvent.organizer._id}
+                            organizerId={selectedEvent.organizer._id}
                             event={true}
                         />
                     </Suspense>
@@ -127,10 +132,10 @@ export async function Event({ eventId }: { eventId: string }): Promise<JSX.Eleme
             <div className="text-gray-300 col-start-4">
                 <AddLike
                     eventId={eventId}
-                    commentId={JSON.stringify(selectedEventData._id)}
-                    replyId={JSON.stringify(selectedEventData._id)}
-                    likes={selectedEventData.likes.length}
-                    timestamp={JSON.stringify(selectedEventData.creationDate)}
+                    commentId={JSON.stringify(selectedEvent._id)}
+                    replyId={JSON.stringify(selectedEvent._id)}
+                    likes={selectedEvent.likes.length}
+                    timestamp={JSON.stringify(selectedEvent.creationDate)}
                     event={true}
                     reply={false}
                     blog={false}
@@ -139,9 +144,9 @@ export async function Event({ eventId }: { eventId: string }): Promise<JSX.Eleme
 
                 <AddComment
                     id={eventId}
-                    commentId={JSON.stringify(selectedEventData._id)}
+                    commentId={JSON.stringify(selectedEvent._id)}
                     viperIdName={undefined}
-                    commentReplies={selectedEventData.comments.length}
+                    commentReplies={selectedEvent.comments.length}
                     timestamp={null}
                     commentCookie={"none"}
                     event={true}

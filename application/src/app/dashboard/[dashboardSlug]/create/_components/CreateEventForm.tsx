@@ -1,4 +1,4 @@
-import { EventUploadImage, Organizer } from "@/types/event"
+import { UploadEventImage, Organizer } from "@/types/event"
 
 import { Autocomplete, LoadScript } from "@react-google-maps/api"
 import React from "react"
@@ -6,18 +6,20 @@ import { SubmitHandler, useForm } from "react-hook-form"
 import { CreateEventInputs } from "@/types/zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { createEventSchema } from "@/lib/zodSchemas/event/createEventSchema"
-import axios, { AxiosError } from "axios"
 import { useSession } from "next-auth/react"
 import { Session } from "next-auth"
 import DisplayImage from "@/app/profile/edit/[id]/_components/DisplayImage"
 import useDisplayImage from "@/app/profile/edit/[id]/_hooks/useDisplayImage"
 import useOnPlaceChanged from "../_hooks/useOnPlaceChanged"
 import useAppendFormData from "@/app/profile/edit/[id]/_hooks/useAppendFormData"
+import { useRouter } from "next/navigation"
 
 const CreateEventForm = () => {
     const { data: session } = useSession()
     const viper: Session["user"] | undefined = session?.user
     if (!viper) throw new Error("No viper bro")
+
+    const router = useRouter()
 
     const organizer: Organizer = {
         _id: viper._id,
@@ -54,74 +56,125 @@ const CreateEventForm = () => {
         try {
             if (formData.has("eventImage")) {
                 const eventImageFormData = formData.get("eventImage")
-                const { data: uploadEventImage, status: eventImageStatus } =
-                    await axios.post<EventUploadImage>(
-                        `/api/event/create/upload-image`,
-                        eventImageFormData
-                    )
-                const eventImageUrl: string | undefined = uploadEventImage.data?.url
-                if (uploadEventImage.error) {
-                }
-                // we can modify the return value of this for a better lecture
-                const { data: stageUploadCreate } = await axios.post<{
+
+                const uploadEventImage = await fetch(`/api/event/create/upload-image`, {
+                    method: "POST",
+                    body: eventImageFormData,
+                })
+
+                const eventImage: UploadEventImage = await uploadEventImage.json()
+
+                const eventImageUrl: string | undefined = eventImage.data?.url
+                setValue("image", eventImageUrl)
+
+                //         // ----------------------------------------------------------------------------------
+                const stageUploadCreate = await fetch(`/api/product/stage-upload`, {
+                    method: "POST",
+                    headers: {
+                        "content-type": "application/json; charset=utf-8",
+                    },
+                    body: JSON.stringify({
+                        data: eventImage.data,
+                    }),
+                })
+
+                const {
+                    stageUpload,
+                }: {
                     stageUpload: {
                         parameters: object[]
                         url: string
                         resourceUrl: string
                     }
-                }>(`/api/product/stage-upload`, {
-                    data: uploadEventImage.data,
-                })
-                const url: string = stageUploadCreate.stageUpload.url
-                const resourceUrl: string = stageUploadCreate.stageUpload.resourceUrl
-                const parameters: object[] = stageUploadCreate.stageUpload.parameters
+                } = await stageUploadCreate.json()
+                const url = stageUpload.url
+                const resourceUrl = stageUpload.resourceUrl
+                const parameters = stageUpload.parameters
+
                 parameters.forEach(({ name, value }: any) => {
                     handleFormData(name, value)
                 })
-                // -----------------------------------
-                const stageUploadUrl = await axios.post(url, formData)
-                // -----------------------------------
-                const { data: createProduct } = await axios.post<{
-                    product: {
-                        _id: string
-                        variant_id: string
-                    }
-                }>(`/api/product/create-shopify`, {
-                    organizer: organizer._id,
-                    resourceUrl: resourceUrl,
-                    title: getValues("title"),
-                    description: getValues("content"),
-                    price: getValues("price"),
-                    entries: getValues("entries"),
-                })
-                const newProduct = {
-                    _id: createProduct.product._id,
-                    variant_id: createProduct.product.variant_id,
+                //---------------------------------------------------------------------------------
+                //IMAGE must be resized. height: 150px, width: 100px works fine for both.
+                if (eventImage.data) {
+                    const stageUploadUrl = await fetch(url, {
+                        headers: {
+                            "Content-Length": eventImage.data.size + 5000,
+                        },
+                        method: "POST",
+                        body: formData,
+                    })
                 }
-                // --------------------------------------------
-                const { data: productCreateMedia } = await axios.post(
-                    `/api/product/create-media`,
-                    {
+                //         // Don't await here for a response
+                //         // ------------------------------------------------------------------------------
+                const createProduct = await fetch(`/api/product/create-shopify`, {
+                    headers: {
+                        "content-type": "application/json; charset=utf-8",
+                    },
+                    method: "POST",
+
+                    body: JSON.stringify({
+                        organizer: organizer._id,
+                        resourceUrl: resourceUrl,
+                        title: getValues("title"),
+                        description: getValues("content"),
+                        price: getValues("price"),
+                        entries: getValues("entries"),
+                    }),
+                })
+
+                const { product }: { product: { _id: string; variant_id: string } } =
+                    await createProduct.json()
+
+                const newProduct = {
+                    _id: product._id,
+                    variant_id: product.variant_id,
+                }
+                // ------------------------------------------------------------------------------
+                const productCreateMedia = await fetch(`/api/product/create-media`, {
+                    method: "POST",
+                    headers: {
+                        "content-type": "application/json; charset=utf-8",
+                    },
+                    body: JSON.stringify({
                         product: newProduct,
                         resourceUrl: resourceUrl,
-                    }
-                )
-                // -----------------------------------------------
-                const { data: publishProduct } = await axios.post(`/api/product/publish-shopify`, {
-                    product: newProduct,
+                    }),
                 })
-                // -----------------------------------------------
-                setValue("image", eventImageUrl)
+                await productCreateMedia.json()
+                // --------------------------------------------------------------------------
+                const publishProduct = await fetch(`/api/product/publish-shopify`, {
+                    method: "POST",
+                    headers: {
+                        "content-type": "application/json; charset=utf-8",
+                    },
+                    body: JSON.stringify({
+                        product: newProduct,
+                    }),
+                })
+                const freshProductInStore = await publishProduct.json()
+                // ---------------------------------------------------------------------------------------------
+
                 setValue("location", location)
-                // Check if everything is fine before making the changes
-                // we might be missing the product id
-                const { data: newEvent } = await axios.post(`/api/event/create/submit`, eventData)
+                const createEvent = await fetch(`/api/event/create/submit`, {
+                    method: "POST",
+                    headers: {
+                        "content-type": "application/json; charset=utf-8",
+                    },
+                    // this should be stringified??????
+                    body: JSON.stringify(eventData),
+                })
+
+                const freshEvent = await createEvent.json()
             }
             // Also let's build a try catch block for each axios
             reset()
+            // We could instead of useRouter indeed go for the revalidatePath
+            // or revalidateTag of next.js ?
+            router.refresh()
         } catch (error: unknown) {
-            if (error instanceof AxiosError) {
-            }
+            // let's handle the error properly
+            console.error(error)
         }
     }
     return (

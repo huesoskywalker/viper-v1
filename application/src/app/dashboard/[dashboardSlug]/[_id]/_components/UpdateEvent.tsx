@@ -1,12 +1,15 @@
 import { getEventById } from "@/lib/events"
 import { Event } from "@/types/event"
 import { UpdateEventForm } from "./UpdateEventForm"
-import axios from "axios"
 
 export default async function UpdateEvent({ eventId }: { eventId: string }) {
-    const { data: toUpdateEvent }: { data: Event } = await axios.get<Event>(
-        `/api/event/${eventId}`
-    )
+    const eventResponse = await fetch(`/api/event/${eventId}`, {
+        method: "GET",
+        headers: {
+            "content-type": "application/json; charset=utf-8",
+        },
+    })
+    const toUpdateEvent: Event = await eventResponse.json()
     if (!toUpdateEvent)
         return (
             <h1 className="text-gray-400 text-xl">

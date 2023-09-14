@@ -9,8 +9,6 @@ import { Customer } from "@shopify/shopify-api/rest/admin/2023-01/customer"
 import { Shopify, Viper } from "@/types/viper"
 import { Event, Product } from "@/types/event"
 import Loading from "../loading"
-import axios from "axios"
-import { ModifyResult } from "mongodb"
 // import { FulfillmentOrder } from "@shopify/shopify-api/rest/admin/2023-01/fulfillment_order"
 
 export function Participate({
@@ -84,14 +82,18 @@ export function Participate({
         setIsCheckout(webUrl)
 
         // ------------------------------------------------------------------------------------------- //
-        const { data: updatedViperParticipation } = await axios.put<ModifyResult<Viper>>(
-            `/api/event/request-participation`,
-            {
+        const participationResponse = await fetch(`/api/event/request-participation`, {
+            method: "PUT",
+            headers: {
+                "content-type": "application/json; charset=utf-8",
+            },
+            body: JSON.stringify({
                 viper: { _id: viper._id },
                 event: { _id: eventId },
                 checkoutId,
-            }
-        )
+            }),
+        })
+        await participationResponse.json()
 
         setIsFetching(false)
 
@@ -103,14 +105,19 @@ export function Participate({
 
     const claimCard = async (): Promise<void> => {
         setIsFetching(true)
-        const { data: claimEventCard } = await axios.put<ModifyResult<Event>>(
-            `/api/event/claim-card`,
-            {
+        const eventCard = await fetch(`/api/event/claim-card`, {
+            method: "PUT",
+            headers: {
+                "content-type": "application/json; charset=utf-8",
+            },
+            body: JSON.stringify({
                 event: { _id: eventId },
                 viper: { _id: viper._id },
-            }
-        )
-
+            }),
+        })
+        await eventCard.json()
+        if (!eventCard.ok) {
+        }
         setIsFetching(false)
         startTransition(() => {
             router.refresh()

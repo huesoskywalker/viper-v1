@@ -1,12 +1,18 @@
 import { Comment } from "@/types/event"
 import { EventCommentsCard } from "./EventCommentsCard"
-import axios from "axios"
 
 export async function EventComments({ eventId }: { eventId: string }) {
-    const { data: eventComments } = await axios.get<Array<{
-        title: string
-        comment: Comment
-    }> | null>(`http://localhost:3000/api/event/comment/${eventId}`)
+    const response = await fetch(`/api/event/comment/${eventId}`, {
+        method: "GET",
+        headers: {
+            "content-type": "application/json; charset=utf-8",
+        },
+    })
+    const eventComments: Array<{ title: string; comment: Comment }> = await response.json()
+    // const { data: eventComments } = await axios.get<Array<{
+    //     title: string
+    //     comment: Comment
+    // }> | null>(`http://localhost:3000/api/event/comment/${eventId}`)
     if (!eventComments) throw new Error("No comments bro")
     return (
         <ul>

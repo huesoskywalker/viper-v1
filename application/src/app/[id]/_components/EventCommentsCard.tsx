@@ -9,7 +9,6 @@ import { EventDate } from "./EventDate"
 import { ViperBasicProps } from "@/types/viper"
 import AddComment from "./AddComment"
 import { AddLike } from "./AddLike"
-import axios from "axios"
 
 export async function EventCommentsCard({
     eventId,
@@ -36,10 +35,13 @@ export async function EventCommentsCard({
 }) {
     const viper_id: string = viperId.replace(/['"]+/g, "")
     const comment_id: string = commentId.replace(/['"]+/g, "")
-    // const viper: ViperBasicProps | null = await getViperBasicProps(viper_id)
-    const { data: viper } = await axios.get<ViperBasicProps>(
-        `/api/viper/${viper_id}?props=basic-props`
-    )
+    const response = await fetch(`/api/viper/${viper_id}?props=basic-props`, {
+        method: "GET",
+        headers: {
+            "content-type": "application/json; charset=utf-8",
+        },
+    })
+    const viper: ViperBasicProps = await response.json()
 
     if (!viper) throw new Error("No viper bro")
     const likedCookie = cookies().get(`_${reply ? replyId : comment_id}_is_liked`)?.value || "none"

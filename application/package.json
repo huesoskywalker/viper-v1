@@ -15,7 +15,6 @@
         "@next-auth/mongodb-adapter": "^1.1.1",
         "@react-google-maps/api": "^2.19.2",
         "@shopify/shopify-api": "^6.2.0",
-        "axios": "^1.4.0",
         "clsx": "1.2.1",
         "date-fns": "2.29.3",
         "formidable": "^3.5.1",

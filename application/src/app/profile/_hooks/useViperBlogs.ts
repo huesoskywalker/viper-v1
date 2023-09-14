@@ -1,27 +1,33 @@
 import { CustomError } from "@/error/CustomError"
-import { AxiosResponseHeaders } from "@/types/axios"
 import { MyBlog } from "@/types/viper"
-import axios, { AxiosError, isAxiosError, AxiosResponse } from "axios"
 
 export async function useViperBlogs(viperId: string): Promise<MyBlog[] | CustomError> {
     try {
-        const viperBlogs: AxiosResponse<MyBlog[], AxiosResponseHeaders> = await axios.post(
-            "http://localhost:3000/api/viper/blog/all",
-            {
+        const blogsResponse = await fetch(`/api/viper/blog/all`, {
+            method: "post",
+            headers: {
+                "content-type": "application/json; charset=utf-8",
+            },
+            body: JSON.stringify({
+                // let's change this viper: { _id: viperId }
                 viper_id: viperId,
-            }
-        )
-        return viperBlogs.data
-    } catch (error) {
-        if (isAxiosError(error)) {
-            const axiosError: AxiosError = error
-            if (axiosError.response) {
-                const status = axiosError.response.status
-                const message = axiosError.response.data as string
+            }),
+        })
+        // const viperBlogs: AxiosResponse<MyBlog[], AxiosResponseHeaders> = await axios.post(
+        //     "/api/viper/blog/all",
+        //     {
+        //         viper_id: viperId,
+        //     }
+        // )
+        const viperBlogs = await blogsResponse.json()
+        return viperBlogs
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            const name = error.name as string
+            const message = error.message as string
 
-                const customError = new CustomError(status, message)
-                return customError
-            }
+            const customError = new CustomError(name, message)
+            return customError
         }
         throw new Error(`${error}`)
     }

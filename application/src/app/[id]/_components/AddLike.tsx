@@ -1,9 +1,5 @@
 "use client"
 
-import { Event } from "@/types/event"
-import { Viper } from "@/types/viper"
-import axios, { isAxiosError } from "axios"
-import { ModifyResult } from "mongodb"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { useTransition, useState, useEffect } from "react"
@@ -50,71 +46,73 @@ export function AddLike({
     const addLike = async (): Promise<void> => {
         if (event && !reply && !blog) {
             try {
-                const { data: likeEvent } = await axios.post<ModifyResult<[Event, Viper]>>(
-                    `/api/event/like`,
-                    {
+                const response = await fetch(`/api/event/like`, {
+                    method: "POST",
+                    headers: {
+                        "content-type": "application/json; charset=utf-8",
+                    },
+                    body: JSON.stringify({
                         event: { _id: eventId },
                         viper: { _id: viperId },
-                    }
-                )
-                if (!likeEvent.ok) {
-                }
+                    }),
+                })
+
+                const eventLiked = await response.json()
             } catch (error: unknown) {
-                if (isAxiosError(error)) {
-                    // handle error
-                }
+                console.error(error)
             }
         } else if (!event && !reply && !blog) {
             try {
-                const { data: likeComment } = await axios.post<ModifyResult<Event>>(
-                    `/api/event/comment/like`,
-                    {
+                const response = await fetch(`/api/event/comment/like`, {
+                    method: "POST",
+                    headers: {
+                        "content-type": "application/json; charset=utf-8",
+                    },
+                    body: JSON.stringify({
                         event: { _id: eventId },
-                        viper: { _id: viperId },
                         comment: { _id: commentId },
-                    }
-                )
-                if (!likeComment.ok) {
-                }
+                        viper: { _id: viperId },
+                    }),
+                })
+
+                await response.json()
             } catch (error: unknown) {
-                if (isAxiosError(error)) {
-                    // handle error
-                }
+                console.error(error)
             }
         } else if (!event && reply && !blog) {
             try {
-                const { data: likeReply } = await axios.post<ModifyResult<Event>>(
-                    `/api/comment/reply/like`,
-                    {
+                const response = await fetch(`/api/comment/reply/like`, {
+                    method: "POST",
+                    headers: {
+                        "content-type": "application/json; charset=utf-8",
+                    },
+                    body: JSON.stringify({
                         event: { _id: eventId },
                         comment: { _id: commentId },
                         reply: { _id: replyId },
                         viper: { _id: viperId },
-                    }
-                )
-                if (!likeReply.ok) {
-                }
+                    }),
+                })
+                await response.json()
             } catch (error: unknown) {
-                if (isAxiosError(error)) {
-                    // handle error
-                }
+                console.error(error)
             }
         } else if (!event && blog) {
             try {
-                const { data: likeBlog } = await axios.post<ModifyResult<[Viper, Viper]>>(
-                    `/api/viper/blog/like`,
-                    {
+                const response = await fetch(`/api/viper/blog/like`, {
+                    method: "POST",
+                    headers: {
+                        "content-type": "application/json; charset=utf-8",
+                    },
+                    body: JSON.stringify({
                         comment: { _id: commentId },
                         blogOwner: { _id: eventId },
                         viper: { _id: viperId },
-                    }
-                )
-                if (!likeBlog.ok) {
-                }
+                    }),
+                })
+                const freshLikedBlog = await response.json()
             } catch (error: unknown) {
-                if (isAxiosError(error)) {
-                    // handle error
-                }
+                console.error(error)
             }
         }
 

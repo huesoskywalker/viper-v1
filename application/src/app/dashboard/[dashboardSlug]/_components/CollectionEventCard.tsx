@@ -3,8 +3,6 @@ import Image from "next/image"
 import { isEventCardAvailable } from "../_lib/isEventCardAvailable"
 import { Event } from "@/types/event"
 import { EventDate } from "@/app/[id]/_components/EventDate"
-import { getEventById } from "@/lib/events"
-import axios, { AxiosResponse } from "axios"
 
 export const CollectionEventCard = async ({
     viperId,
@@ -20,11 +18,20 @@ export const CollectionEventCard = async ({
     const event_id: string = eventId.slice(1, -1)
     const link: string = href.slice(1, -1)
     // const eventPromise: Promise<Event | null> = getEventById(event_id)
-    const eventPromise: Promise<AxiosResponse<Event>> = axios.get<Event>(`/api/event/${eventId}`)
+    const eventPromise: Promise<Response> = fetch(`/api/event/${eventId}`, {
+        method: "GET",
+        headers: {
+            "content-type": "application/json; charset=utf-8",
+        },
+    })
+    // const eventPromise: Promise<AxiosResponse<Event>> = axios.get<Event>(`/api/event/${eventId}`)
     const eventCardAvailableData: Promise<boolean> = isEventCardAvailable(event_id, viperId)
 
-    const [event, eventCardAvailable] = await Promise.all([eventPromise, eventCardAvailableData])
-
+    const [eventData, eventCardAvailable] = await Promise.all([
+        eventPromise,
+        eventCardAvailableData,
+    ])
+    const event: Event = await eventData.json()
     if (!event) {
         return (
             <div>
@@ -34,8 +41,7 @@ export const CollectionEventCard = async ({
             </div>
         )
     }
-    const eventData = event.data
-    const eventAddress = eventData.location.address
+    const eventAddress = event.location.address
 
     return (
         <>
@@ -44,13 +50,13 @@ export const CollectionEventCard = async ({
                     <div className="space-y-1">
                         <Image
                             data-test="event-image"
-                            src={`/upload/${eventData.image}`}
+                            src={`/upload/${event.image}`}
                             width={400}
                             height={400}
                             // className="rounded-xl max-h-[96px] max-auto group-hover:opacity-80"
 
                             className="rounded-xl max-h-36 max-w-auto group-hover:opacity-80"
-                            alt={eventData.title ?? "none"}
+                            alt={event.title ?? "none"}
                             placeholder="blur"
                             blurDataURL={"product.imageBlur"}
                         />
@@ -58,12 +64,12 @@ export const CollectionEventCard = async ({
                             data-test="event-title"
                             className="flex justify-start font-semibold text-sm text-gray-100"
                         >
-                            {eventData.title}
+                            {event.title}
                         </h2>
                         <p data-test="event-location" className="text-xs text-gray-300">
                             {eventAddress.province}, {eventAddress.country}
                         </p>
-                        <EventDate date={eventData.date} collection={true} />
+                        <EventDate date={event.date} collection={true} />
                     </div>
                 </Link>
             ) : null}

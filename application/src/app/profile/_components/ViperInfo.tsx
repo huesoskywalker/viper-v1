@@ -2,14 +2,18 @@ import Link from "next/link"
 import Image from "next/image"
 import { getViperBasicProps } from "@/lib/vipers"
 import { ViperBasicProps } from "@/types/viper"
-import axios from "axios"
 
 export default async function ViperInfo({ id }: { id: string }) {
     const viperId: string = id.replace(/['"]+/g, "")
     // const viper: ViperBasicProps | null = await getViperBasicProps(viperId)
-    const { data: viper } = await axios.get<ViperBasicProps>(
-        `/api/viper/${viperId}?props=basic-props`
-    )
+    const viperResponse = await fetch(`/api/viper/${viperId}?props=basic-props`, {
+        method: "GET",
+        headers: {
+            "content-type": "application/json; charset=utf-8",
+        },
+    })
+    const viper = await viperResponse.json()
+
     if (!viper) return
 
     return (

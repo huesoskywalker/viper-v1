@@ -4,10 +4,6 @@ import { useSession } from "next-auth/react"
 import { useEffect, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
-import axios from "axios"
-import { Event } from "@/types/event"
-import { ModifyResult } from "mongodb"
-import { Viper } from "@/types/viper"
 
 export default function AddComment({
     id,
@@ -47,32 +43,46 @@ export default function AddComment({
     const submitComment = async (e: any): Promise<void> => {
         e.preventDefault()
         if (event && !reply && !blog) {
-            const { data: eventComment } = await axios.post<ModifyResult<Event>>(
-                `/api/event/comment/post`,
-                {
+            const eventComment = await fetch(`/api/event/comment/post`, {
+                method: "POST",
+                headers: {
+                    "content-type": "application/json; charset=utf-8",
+                },
+                body: JSON.stringify({
                     event: { _id: id },
                     viper: { _id: viperId },
                     comment: comment,
-                }
-            )
+                }),
+            })
+            const newComment: Comment = await eventComment.json()
         } else if (!event && reply && !blog) {
-            const { data: replyComment } = await axios.post<ModifyResult<Event>>(
-                `/api/event/comment/reply/post`,
-                {
+            const replyComment = await fetch(`/api/event/comment/reply/post`, {
+                method: "POST",
+                headers: {
+                    "content-type": "application/json; charset=utf-8",
+                },
+                body: JSON.stringify({
                     event: { _id: id },
                     viper: { _id: viperId },
                     comment: { _id: commentId, content: comment },
-                }
-            )
+                }),
+            })
+
+            await replyComment.json()
         } else if (blog) {
-            const { data: blogComment } = await axios.post<ModifyResult<Viper>>(
-                `/api/viper/blog/comment`,
-                {
+            const blogComment = await fetch(`/api/viper/blog/comment`, {
+                method: "POST",
+                headers: {
+                    "content-type": "application/json; charset=utf-8",
+                },
+                body: JSON.stringify({
                     comment: { _id: commentId, content: comment },
                     blogOwner: { _id: id },
                     viper: { _id: viperId },
-                }
-            )
+                }),
+            })
+
+            await blogComment.json()
         }
         setIsCommented(isCommented === "none" ? "blue" : "none")
         startTransition(() => {

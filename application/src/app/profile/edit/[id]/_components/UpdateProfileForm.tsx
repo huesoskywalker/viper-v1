@@ -1,5 +1,4 @@
 "use client"
-import axios from "axios"
 import { redirect, useRouter } from "next/navigation"
 import React, { FormEvent, useState, useTransition } from "react"
 import DisplayImage from "./DisplayImage"
@@ -43,13 +42,17 @@ const UpdateProfileForm = () => {
         try {
             if (formData.has("image")) {
                 const profileImageFormData = formData.get("image")
-                const { data: profileImage, status: profileImageStatus } =
-                    await axios.post<UploadViperImage>(
-                        `/api/viper/profile-image`,
-                        profileImageFormData
-                    )
+                const profileImageResponse = await fetch(`/api/viper/profile-image`, {
+                    method: "POST",
+                    headers: {
+                        "content-type": "application/json; charset=utf-8",
+                    },
+                    body: profileImageFormData,
+                })
+                const profileImage: UploadViperImage = await profileImageResponse.json()
 
-                if (profileImage.data !== null && profileImageStatus === 200) {
+                // gotta figure out which is the best approach if ok or status as in backgroundImage
+                if (profileImage.data !== null && profileImageResponse.ok) {
                     handleUpdateViperForm(`image`, profileImage.data.url)
                 }
             }
@@ -57,18 +60,36 @@ const UpdateProfileForm = () => {
             // ---------------------------------------------------------------
             if (formData.has("backgroundImage")) {
                 const backgroundImageFormData = formData.get("backgroundImage")
-                const { data: backgroundImage, status: backgroundImageStatus } =
-                    await axios.post<UploadViperImage>(
-                        `/api/viper/background-image`,
-                        backgroundImageFormData
-                    )
+                const backgroundImageResponse = await fetch(`/api/viper/background-image`, {
+                    method: "POST",
+                    headers: {
+                        "content-type": "application/json; charset=utf-8",
+                    },
+                    body: backgroundImageFormData,
+                })
+                const backgroundImage: UploadViperImage = await backgroundImageResponse.json()
+                if (!backgroundImageResponse.ok) {
+                    // do something here
+                    // backgroundImage.error ? what we do think?
+                }
 
-                if (backgroundImage.data !== null && backgroundImageStatus === 200) {
+                if (backgroundImage.data !== null && backgroundImageResponse.status === 200) {
                     handleUpdateViperForm("backgroundImage", backgroundImage.data.url)
                 }
             }
             // -----------------------------------------------
-            await axios.put<ModifyResult<Viper>>(`/api/viper/update`, updateViperForm)
+            const updateViperResponse = await fetch(`/api/viper/update`, {
+                method: "PUT",
+                headers: {
+                    "content-type": "application/json; charset=utf-8",
+                },
+                body: JSON.stringify(updateViperForm),
+            })
+            const updatedViper = await updateViperResponse.json()
+            if (!updateViperResponse.ok) {
+                // do something
+                // setError? what eva
+            }
             // ----------------------------------------------
             updateSession({
                 name: updateViperForm.name,

@@ -89,12 +89,12 @@ export type UpdateEvent = Pick<
     "_id" | "title" | "content" | "date" | "category" | "updatedDate" | "price"
 >
 
-export type EventUploadImage = {
+export type UploadEventImage = {
     data: {
         url: string
-        filename: string | null
-        type: string | null
-        size: string | null
+        filename: string
+        type: string
+        size: string
     } | null
     error: string | null
 }

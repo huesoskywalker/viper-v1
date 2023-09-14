@@ -1,6 +1,5 @@
 import { Location } from "@/types/event"
 import { AutocompleteType, PlaceType } from "@/types/google-maps-api"
-import { any } from "cypress/types/bluebird"
 import React, { useState } from "react"
 
 const useOnPlaceChanged = (): {

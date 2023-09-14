@@ -6,7 +6,7 @@ import { TabGroup } from "@/app/_components/TabGroup"
 
 export default async function Layout({ children, params }: PageProps) {
     const viperId: string = params.id
-    const category: ProfileMenu[] = await fetchProfileMenu()
+    const category: ProfileMenu[] = fetchProfileMenu()
     preloadViperBasicProps(viperId)
 
     return (

@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import axios from "axios"
 import { SubmitHandler, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { UpdateEventInputs } from "@/types/zod"
@@ -50,15 +49,17 @@ export function UpdateEventForm({
         },
     })
 
-    const processForm: SubmitHandler<UpdateEventInputs> = async (data: UpdateEventInputs) => {
+    const processForm: SubmitHandler<UpdateEventInputs> = async (eventData: UpdateEventInputs) => {
         setPendingEdit(!pendingEdit)
         try {
             setValue("updatedDate", Date.now())
-
-            const { data: updatedEvent } = await axios.put<ModifyResult<Event>>(
-                `/api/event/create/submit`,
-                data
-            )
+            const eventResponse = await fetch(`/api/event/create/submit`, {
+                method: "PUT",
+                headers: {
+                    "content-type": "application/json; charset=utf-8",
+                },
+                body: JSON.stringify(eventData),
+            })
             // same is data is successfully we should do something instead of instant router.push()
             reset()
             // We need to manage the errors in the endpoint and use the setError from react hook form in here
@@ -83,13 +84,6 @@ export function UpdateEventForm({
 
     const deleteEvent = async (): Promise<void> => {
         try {
-            const { data: deletedEvent } = await axios.delete(`/api/event/create/submit`, {
-                data: {
-                    eventId: eventId,
-                    eventOrganizerId: eventOrganizerId,
-                    image: eventImage,
-                },
-            })
             const response = await fetch(`/api/event/create/submit`, {
                 method: "DELETE",
                 headers: {

@@ -3,7 +3,6 @@ import { getViperBasicProps } from "@/lib/vipers"
 import { delay } from "@/app/[id]/_lib/delay"
 import { ViperBasicProps } from "@/types/viper"
 import { EventCommentsCard } from "@/app/[id]/_components/EventCommentsCard"
-import axios, { AxiosResponse } from "axios"
 
 export async function CommentReplies({
     repliesPromise,
@@ -17,13 +16,16 @@ export async function CommentReplies({
     viperId: string
 }) {
     // const commentViperData: Promise<ViperBasicProps | null> = getViperBasicProps(viperId)
-
-    const commentViperPromise: Promise<AxiosResponse<ViperBasicProps>> =
-        axios.get<ViperBasicProps>(`/api/viper/${viperId}?props=basic-props`)
-    const [replies, commentViper] = await Promise.all([repliesPromise, commentViperPromise])
+    const viperPromise: Promise<Response> = fetch(`/api/viper/${viperId}?props=basic-props`, {
+        method: "GET",
+        headers: {
+            "content-type": "application/json; charset=utf-8",
+        },
+    })
+    const [replies, viperData] = await Promise.all([repliesPromise, viperPromise])
 
     if (!replies) throw new Error("No event bro")
-    const commentViperData = commentViper.data
+    const viper: ViperBasicProps = await viperData.json()
     await delay(300)
     return (
         <ul>
@@ -33,7 +35,7 @@ export async function CommentReplies({
                     <EventCommentsCard
                         key={JSON.stringify(reply._id)}
                         eventId={eventId}
-                        replyTo={commentViperData.name}
+                        replyTo={viper.name}
                         commentId={commentId}
                         viperId={JSON.stringify(reply.viperId)}
                         text={reply.reply}
