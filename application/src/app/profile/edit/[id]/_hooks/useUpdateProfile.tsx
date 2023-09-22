@@ -1,13 +1,13 @@
 "use client"
 import { UpdateProfileHook, UpdateProfileInput } from "@/types/profile-hooks"
-import { UpdateViperType, _ID } from "@/types/viper"
+import { UpdateViper, _ID } from "@/types/viper"
 import { Session } from "next-auth"
 import { useState } from "react"
 
 const useUpdateProfile = (viper: Session["user"]): UpdateProfileHook => {
     // we should make another hook to handle the sessions and the update
 
-    const [updateViperForm, setUpdateViperForm] = useState<UpdateViperType>({
+    const [updateViperForm, setUpdateViperForm] = useState<UpdateViper>({
         _id: viper._id as _ID,
         name: viper.name,
         biography: "",

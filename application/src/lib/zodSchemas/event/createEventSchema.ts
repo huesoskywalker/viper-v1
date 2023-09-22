@@ -36,6 +36,8 @@ const coordinatesSchema = z.object({
             }
         ),
 })
+// Thing in here is that this will work in the endpoint I guess since we are splitting the location from google api
+// and using a custom hook to retrieve the location
 const locationSchema = z.object({
     address: addressSchema,
     coordinates: coordinatesSchema,
@@ -76,6 +78,7 @@ export const createEventSchema = z.object({
                 message: "Invalid time format HH:mm",
             }
         ),
+    location: locationSchema,
     category: z.string().nonempty("Category is required"),
     image: z.string().nonempty("Image url must be provided"),
     price: z

@@ -14,12 +14,16 @@ export default async function OrganizerInfo({
     event: boolean
 }) {
     const organizer_id: string = organizerId.replace(/["']+/g, "")
-    const organizerPromise = fetch(`/api/viper/${organizer_id}?props=basic-props`, {
-        method: "GET",
-        headers: {
-            "content-type": "application/json; charset=utf-8",
-        },
-    })
+    const queryParams = new URLSearchParams({ props: "basic-props" })
+    const organizerPromise = fetch(
+        `https://localhost:3000/api/viper/${organizer_id}?${queryParams}`,
+        {
+            method: "GET",
+            headers: {
+                "content-type": "application/json; charset=utf-8",
+            },
+        }
+    )
 
     const isOrganizerFollowedPromise: Promise<boolean> = getViperFollowById(organizer_id)
 

@@ -7,8 +7,8 @@ export type Event = {
     organizer: Organizer
     title: Title
     content: Content
-    location: Location
     date: Date
+    location: Location
     category: Category
     image: Image
     price: Price

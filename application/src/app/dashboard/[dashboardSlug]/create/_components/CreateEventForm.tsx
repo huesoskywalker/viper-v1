@@ -52,7 +52,7 @@ const CreateEventForm = () => {
         },
     })
 
-    const processForm: SubmitHandler<CreateEventInputs> = async (eventData: CreateEventInputs) => {
+    const processForm: SubmitHandler<CreateEventInputs> = async (payload: CreateEventInputs) => {
         try {
             if (formData.has("eventImage")) {
                 const eventImageFormData = formData.get("eventImage")
@@ -65,6 +65,7 @@ const CreateEventForm = () => {
                 const eventImage: UploadEventImage = await uploadEventImage.json()
 
                 const eventImageUrl: string | undefined = eventImage.data?.url
+                //    we are handling the image from the form with another function
                 setValue("image", eventImageUrl)
 
                 //         // ----------------------------------------------------------------------------------
@@ -116,6 +117,7 @@ const CreateEventForm = () => {
                     body: JSON.stringify({
                         organizer: organizer._id,
                         resourceUrl: resourceUrl,
+                        // In here we should do payload.title
                         title: getValues("title"),
                         description: getValues("content"),
                         price: getValues("price"),
@@ -130,6 +132,7 @@ const CreateEventForm = () => {
                     _id: product._id,
                     variant_id: product.variant_id,
                 }
+                setValue("product", newProduct)
                 // ------------------------------------------------------------------------------
                 const productCreateMedia = await fetch(`/api/product/create-media`, {
                     method: "POST",
@@ -161,11 +164,17 @@ const CreateEventForm = () => {
                     headers: {
                         "content-type": "application/json; charset=utf-8",
                     },
-                    // this should be stringified??????
-                    body: JSON.stringify(eventData),
+                    body: JSON.stringify(payload),
                 })
 
-                const freshEvent = await createEvent.json()
+                const newEvent = await createEvent.json()
+                if (!createEvent.ok) {
+                    alert("Submitting form failed")
+                    return
+                }
+                if (newEvent.errors) {
+                    // We should mostly do as the updatedForm where we make a foreach in the issues
+                }
             }
             // Also let's build a try catch block for each axios
             reset()

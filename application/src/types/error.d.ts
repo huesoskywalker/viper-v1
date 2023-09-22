@@ -1,5 +1,5 @@
 export type ErrorDisplayProps = {
     name: string
-    status: number
+    // status: number
     message: string
 }

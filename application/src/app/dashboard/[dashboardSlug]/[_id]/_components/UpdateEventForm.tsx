@@ -6,8 +6,6 @@ import { SubmitHandler, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { UpdateEventInputs } from "@/types/zod"
 import { updateEventSchema } from "@/lib/zodSchemas/event/updateEventSchema"
-import { ModifyResult } from "mongodb"
-import { Event } from "@/types/event"
 
 export function UpdateEventForm({
     eventId,
@@ -49,17 +47,34 @@ export function UpdateEventForm({
         },
     })
 
-    const processForm: SubmitHandler<UpdateEventInputs> = async (eventData: UpdateEventInputs) => {
+    const processForm: SubmitHandler<UpdateEventInputs> = async (payload: UpdateEventInputs) => {
         setPendingEdit(!pendingEdit)
         try {
             setValue("updatedDate", Date.now())
-            const eventResponse = await fetch(`/api/event/create/submit`, {
+            const updateEventResponse = await fetch(`/api/event/create/submit`, {
                 method: "PUT",
                 headers: {
                     "content-type": "application/json; charset=utf-8",
                 },
-                body: JSON.stringify(eventData),
+                body: JSON.stringify(payload),
             })
+            const updatedEvent = await updateEventResponse.json()
+            if (!updateEventResponse.ok) {
+                alert("Updating event failed")
+                return
+            }
+            if (updatedEvent.errors) {
+                // Check the endpoint, add the type and continue
+                const errors = updatedEvent.errors
+                if (errors.title) {
+                    setError("title", {
+                        type: "server",
+                        message: errors.title,
+                    })
+                } else if (errors.content) {
+                    // and continue, check if content is the variable
+                }
+            }
             // same is data is successfully we should do something instead of instant router.push()
             reset()
             // We need to manage the errors in the endpoint and use the setError from react hook form in here
@@ -76,9 +91,9 @@ export function UpdateEventForm({
         }
     }
 
-    const [isFetching, setIsFetching] = useState<boolean>(false)
+    // const [isFetching, setIsFetching] = useState<boolean>(false)
 
-    const isMutating = isFetching || isSubmitting
+    // const isMutating = isFetching || isSubmitting
 
     const router = useRouter()
 
@@ -205,7 +220,7 @@ export function UpdateEventForm({
                             <button
                                 data-test="edit-event-button"
                                 className={`${
-                                    isMutating ? "bg-opacity-60" : "bg-opacity-100"
+                                    isSubmitting ? "bg-opacity-60" : "bg-opacity-100"
                                 } relative w-2/6 items-center space-x-2 rounded-lg bg-gray-700 my-3  py-2 text-sm font-medium text-gray-200 hover:bg-yellow-700 hover:text-white disabled:text-white/70`}
                                 disabled={isSubmitting}
                                 type={"submit"}

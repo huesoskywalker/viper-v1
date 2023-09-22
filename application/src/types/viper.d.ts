@@ -109,7 +109,10 @@ export type ViperBasicProps = Pick<
     | "follows"
 >
 
-export type UpdateViperType = Pick<
+// most probably we should do something like this -> (_id needed?)
+// Like this will be more clean, pick what we would like to update and then make them optional
+export type UpdateViper = Partial<UpdateViperType>
+type UpdateViperPick = Pick<
     Viper,
     "_id" | "name" | "biography" | "image" | "backgroundImage" | "location"
 >

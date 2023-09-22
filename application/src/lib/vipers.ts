@@ -9,7 +9,7 @@ import {
     ExternalBlog,
     MyBlog,
     Chats,
-    UpdateViperType,
+    UpdateViper,
 } from "@/types/viper"
 import { getCurrentViper } from "./session"
 import { Session } from "next-auth"
@@ -321,7 +321,7 @@ export const likeBlog = async (
     return Promise.all([viperBlogUpdate, likeBlogUpdate])
 }
 
-export const updateViperProfile = async (viper: UpdateViperType) => {
+export const updateViperProfile = async (viper: UpdateViper) => {
     const { _id, name, biography, image, backgroundImage, location } = viper
     const editProfile: ModifyResult<Viper> = await viperCollection.findOneAndUpdate(
         {

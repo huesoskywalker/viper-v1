@@ -12,7 +12,7 @@ export async function ViperBlogs({ viperId }: { viperId: string }): Promise<JSX.
             <div className="flex items-start justify-center max-w-screen-md min-h-screen mx-auto px-4 sm:px-6 lg:px-8 space-y-8 mt-7">
                 <ErrorDisplay
                     name={viperBlogs.name}
-                    status={viperBlogs.status}
+                    // status={viperBlogs.status}
                     message={viperBlogs.message}
                 />
             </div>
