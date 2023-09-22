@@ -1,11 +1,12 @@
 import { DeleteResult, ObjectId } from "mongodb"
+import { Event } from "./event"
 
 export type Viper = {
     readonly _id: _ID
     address: Address
     backgroundImage: Image
     biography: Biography
-    blog: Blog
+    blogs: Blog
     email: Email
     emailVerified: null
     name: Name
@@ -28,14 +29,14 @@ type Name = string
 // type Location = string
 export type MyEvents = {
     readonly _id: _ID
-    created: Created[]
-    collection: Collection[]
-    likes: Likes[]
+    created: CreatedEvent[]
+    collection: EventCollection[]
+    liked: Likes[]
 }
-export type Created = {
+export type CreatedEvent = {
     readonly _id: _ID
 }
-export type Collection = {
+export type EventCollection = {
     readonly _id: _ID
     readonly checkoutId: string
 }
@@ -55,23 +56,27 @@ export type Address = {
 }
 
 export type Blog = {
-    myBlog: MyBlog[]
-    likes: ExternalBlog[]
-    commented: ExternalBlog[]
+    personal: PersonalBlog[]
+    liked: ExternalBlog[]
+    commented: ExternalBlog & { comment: string }[]
 }
 
-export type MyBlog = {
+export type PersonalBlog = {
     readonly _id: _ID
     content: string
     likes: Likes[]
     comments: string[]
     timestamp: number
 }
+// Should be great if we add another DB or Collection for Blogs, and mostly everything
+// So we can store only the _id and then map through the blogs and retrieve the comments
+// That will make the docs lighter
 export type ExternalBlog = {
     readonly _id: _ID
-    readonly blogOwner_id: _ID
-    readonly viper_id: _ID
-    comment?: string
+    readonly viperId: _ID
+    // we might not need ths since it will be the currentViper
+    // and we might get it from some session
+    // readonly viper_id: _ID
     timestamp: number
 }
 
@@ -117,24 +122,24 @@ type UpdateViperPick = Pick<
     "_id" | "name" | "biography" | "image" | "backgroundImage" | "location"
 >
 
-// export type Hex24String = `${
-//     | "0"
-//     | "1"
-//     | "2"
-//     | "3"
-//     | "4"
-//     | "5"
-//     | "6"
-//     | "7"
-//     | "8"
-//     | "9"
-//     | "a"
-//     | "b"
-//     | "c"
-//     | "d"
-//     | "e"
-//     | "f"}{24}`
-export type Hex24String = string & { length: 24 }
+export type Hex24String = `${
+    | "0"
+    | "1"
+    | "2"
+    | "3"
+    | "4"
+    | "5"
+    | "6"
+    | "7"
+    | "8"
+    | "9"
+    | "a"
+    | "b"
+    | "c"
+    | "d"
+    | "e"
+    | "f"}{24}`
+// export type Hex24String = string & { length: 24 }
 
 export type _ID = ObjectId | Hex24String
 export type UploadViperImage = {
@@ -145,54 +150,56 @@ export type UploadViperImage = {
 export interface IViperRepository {
     getAll(): Promise<Viper[]>
     getById(viperId: string): Promise<Viper | null>
-    getBasicPropsById(viperId: string)
+    getByIdBasicProps(viperId: string): Promise<ViperBasicProps | null>
     // This is one below is built for the search input
     findByUsername(username: string): Promise<Viper[] | null>
-    getEventsCollection(viperId: string): Promise<Collection[]>
-    getLikedEvents(viperId: string): Promise<Likes[]>
+    update(viper: UpdateViperType): Promise<WithId<Viper> | null>
     getFollows(viperId: string): Promise<Follow[]>
-    // check in this function we are using the currentViper, we can handle it better than this
-    // in the name and most probably use the session we've got or might it be cool that way
-    // getViperFollowById, also this name convention is more convenient
-    // And we should make it the other way, check inside our followers if we already follow him
-    isViperFollowed(viperId: string): Promise<boolean>
-    isEventParticipationRequested(viperId: string, eventId: string): Promise<boolean>
-    getBlogs(viperId: string): Promise<Blog[]>
-    createBlog(viperId: string, comment: string): Promise<ModifyResult<Viper>>
-    // We can do it better in here also, divide it into 2 different functions maybe?
-    // this function looks awful, let's make it different if we can likeBlog and updateBlog
+    // ====================================================
+    // should we add getFollowers? check if the function already
+    // getFollowers(viperId: string): Promise<Follow[]>
+    // =========================================
+    isViperFollowed(currentViperId: string, viperId: string): Promise<boolean>
+    toggleFollow(
+        isFollowed: boolean,
+        viperId: string,
+        currentViperId: string
+    ): Promise<[WithId<Viper> | null, WithId<Viper> | null]>
+    // We need to add a initChat type and function
+    // initChat(viperId: string, currentViperId: string): Promise
+    getBlogs(viperId: string): Promise<WithId<Blog[]> | null>
+    createBlog(viperId: string, comment: string): Promise<WithId<Viper> | null>
+    isBlogLiked(blogId: string, viperId: string, currentViperId: string): Promise<boolean>
     likeBlog(
-        blogOwnerId: string,
-        _id: string,
-        viperId: string
-    ): Promise<[ModidfyResult<Viper>, ModifyResult<Viper>]>
-    // check in here if we should pass the ids and then transform them as array with the EventRepository
-    getEventsCreated(viperId: string): Promise<Eventtype[] | null>
-    updateProfile(viper: UpdateViperType): Promise<ModifyResult<Viper>>
-    // In here also, we should make a addFollow and addFollower and split into a better instance of it
-    // same we do have the initChat in here so we should perform something to add a request to chat, and create the instance
-    addFollow(
+        isLiked: boolean,
+        blogId: string,
         viperId: string,
-        currentViper: string
-    ): Promise<[ModifyResult<Viper>, ModifyResult<Viper>]>
-    // let's make a better name to the _id, blogId?
+        currentViperId: string
+    ): Promise<[MWithId<Viper> | null, WithId<Viper> | null]>
     addCommentToBlog(
-        blogOwnerId: string,
-        _id: string,
+        blogId: string,
         viperId: string,
+        currentViperId: string,
         comment: string
-    ): Promise<ModifyResult<Viper>>
+    ): Promise<WithId<Viper>>
+    // wonder if we should return an empty[] if it does not have any event
+    toggleLikeEvent(
+        isLiked: boolean,
+        eventId: string,
+        viperId: string
+    ): Promise<WithId<Viper> | null>
+    getLikedEvents(viperId: string): Promise<Likes[]>
+    getEventsCollection(viperId: string): Promise<Collection[]>
+    isEventParticipationRequested(viperId: string, eventId: string): Promise<boolean>
     requestEventParticipation(
         viperId: string,
         eventId: string,
         checkoutId: string
-    ): Promise<ModifyResult<Viper>>
+    ): Promise<WithId<Viper>>
     // check the name convention, we make it different because of the EventRepository, for now
-    toggleLikeEvent(
-        viperId: string,
-        eventId: string,
-        operation: string
-    ): Promise<ModifyResult<Viper>>
-    addOrganizedEvent(viperId: string, eventId: string): Promise<ModifyResult<Viper>>
-    removeOrganizedEvent(viperId: string, eventId: string): Promise<ModifyResult<Viper>>
+    // addCratedEvent
+    addCreatedEvent(viperId: string, eventId: string): Promise<WithId<Viper> | null>
+    // removeCreatedEvent
+    deleteCreatedEvent(viperId: string, eventId: string): Promise<WithId<Viper> | null>
+    getCreatedEvents(viperId: string): Promise<CreatedEvent[]>
 }
