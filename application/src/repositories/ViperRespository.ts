@@ -4,30 +4,30 @@ import {
     EventCollection,
     ExternalBlog,
     Follow,
-    IViperRepository,
     Likes,
+    TViperRepository,
     UpdateViper,
     Viper,
     ViperBasicProps,
 } from "@/types/viper"
 import { Collection, Db, ObjectId, WithId } from "mongodb"
 
-export class ViperRepository implements IViperRepository {
+export class ViperRepository implements TViperRepository {
     private viperCollection: Collection<Viper>
     constructor(database: Db) {
         this.viperCollection = database.collection<Viper>("users")
     }
-    async getAll(): Promise<Viper[]> {
+    async getAll(): Promise<WithId<Viper>[]> {
         try {
-            const vipers: Viper[] = await this.viperCollection.find<Viper>({}).toArray()
+            const vipers: WithId<Viper>[] = await this.viperCollection.find({}).toArray()
             return vipers
         } catch (error: unknown) {
             throw new Error(`Repository Error: Failed to retrieve Vipers, ${error}`)
         }
     }
-    async getById(viperId: string): Promise<Viper | null> {
+    async getById(viperId: string): Promise<WithId<Viper> | null> {
         try {
-            const viper: Viper | null = await this.viperCollection.findOne<Viper>({
+            const viper: WithId<Viper> | null = await this.viperCollection.findOne({
                 _id: new ObjectId(viperId),
             })
             return viper
@@ -38,7 +38,7 @@ export class ViperRepository implements IViperRepository {
     }
     async getByIdBasicProps(viperId: string): Promise<ViperBasicProps | null> {
         try {
-            const viperBasicProps: Viper | null = await this.viperCollection.findOne<Viper>(
+            const viperBasicProps: WithId<Viper> | null = await this.viperCollection.findOne(
                 {
                     _id: new ObjectId(viperId),
                 },
@@ -61,7 +61,7 @@ export class ViperRepository implements IViperRepository {
             throw new Error(`Repository Error: Failed to retrieve Viper basic Props, ${error}`)
         }
     }
-    async findByUsername(username: string): Promise<Viper[] | null> {
+    async findByUsername(username: string): Promise<Viper[]> {
         try {
             await this.viperCollection.createIndexes([
                 {
@@ -70,15 +70,15 @@ export class ViperRepository implements IViperRepository {
                 },
             ])
 
-            const viper: Viper[] = await this.viperCollection
-                .find({
+            const vipers: Viper[] = await this.viperCollection
+                .find<Viper>({
                     $text: {
                         $search: username,
                     },
                 })
                 .toArray()
 
-            return viper
+            return vipers
         } catch (error: unknown) {
             throw new Error(`Repository Error: Failed to find Viper by Username, ${error}`)
         }
@@ -128,7 +128,7 @@ export class ViperRepository implements IViperRepository {
             throw new Error(`Repository Error: Failed to retrieve Viper follows, ${error}`)
         }
     }
-    async isViperFollowed(currentViperId: string, viperId: string): Promise<boolean> {
+    async isViperFollowed(viperId: string, currentViperId: string): Promise<boolean> {
         try {
             const isFollowed: WithId<Viper> | null = await this.viperCollection.findOne({
                 _id: new ObjectId(viperId),
@@ -141,17 +141,15 @@ export class ViperRepository implements IViperRepository {
             )
         }
     }
-    async toggleFollow(
+    async toggleFollower(
         isFollowed: boolean,
         viperId: string,
         currentViperId: string
-    ): Promise<[WithId<Viper> | null, WithId<Viper> | null]> {
+    ): Promise<WithId<Viper> | null> {
+        const operation: string = isFollowed ? "$pull" : "$push"
         try {
-            // This isFollowed comes from the method isViperFollowed
-            const operation: string = isFollowed ? "$pull" : "$push"
-
-            const addFollower: Promise<WithId<Viper> | null> =
-                this.viperCollection.findOneAndUpdate(
+            const toggleFollower: WithId<Viper> | null =
+                await this.viperCollection.findOneAndUpdate(
                     {
                         _id: new ObjectId(viperId),
                     },
@@ -162,19 +160,32 @@ export class ViperRepository implements IViperRepository {
                     }
                 )
 
-            const addFollow: Promise<WithId<Viper> | null> = this.viperCollection.findOneAndUpdate(
-                {
-                    _id: new ObjectId(currentViperId),
-                },
-                {
-                    [operation]: {
-                        follows: { _id: new ObjectId(viperId) },
-                    },
-                }
-            )
-            return Promise.all([addFollower, addFollow])
+            return toggleFollower
         } catch (error: unknown) {
-            throw new Error(`Repository Error: Failed to toggle Follow from Viper, ${error}`)
+            throw new Error(`Repository Error: Failed to ${operation} Viper follower, ${error}`)
+        }
+    }
+    async toggleCurrentFollow(
+        isFollowed: boolean,
+        viperId: string,
+        currentViperId: string
+    ): Promise<WithId<Viper> | null> {
+        const operation: string = isFollowed ? "$pull" : "$push"
+        try {
+            const toggleCurrentFollow: Promise<WithId<Viper> | null> =
+                this.viperCollection.findOneAndUpdate(
+                    {
+                        _id: new ObjectId(currentViperId),
+                    },
+                    {
+                        [operation]: {
+                            follows: { _id: new ObjectId(viperId) },
+                        },
+                    }
+                )
+            return toggleCurrentFollow
+        } catch (error: unknown) {
+            throw new Error(`Repository Error: Failed to ${operation} current Follow, ${error}`)
         }
     }
     async getBlogs(viperId: string): Promise<Blog[]> {
@@ -245,119 +256,124 @@ export class ViperRepository implements IViperRepository {
             })
             return isLiked ? true : false
         } catch (error: unknown) {
-            throw new Error(`Repository Error: Failed to if Blog is already liked, ${error}`)
+            throw new Error(`Repository Error: Failed to check if Blog is already liked, ${error}`)
         }
     }
-    async likeBlog(
+    async toggleBlogLike(
         isLiked: boolean,
         blogId: string,
         viperId: string,
         currentViperId: string
-    ): Promise<[WithId<Viper> | null, WithId<Viper> | null]> {
+    ): Promise<WithId<Viper> | null> {
+        const operation: string = isLiked ? "$pull" : "$push"
         try {
-            let likeBlogObj: Partial<ExternalBlog> = {
-                _id: new ObjectId(blogId),
-                viperId: new ObjectId(viperId),
-                // currentViperId: new ObjectId(currentViperId),
-            }
-            const operation: string = isLiked ? "$pull" : "$push"
-            if (operation === "$push") {
-                likeBlogObj = {
-                    ...likeBlogObj,
-                    timestamp: Date.now(),
-                } as ExternalBlog
-            }
-            const addLikeToBlog: Promise<WithId<Viper> | null> =
-                this.viperCollection.findOneAndUpdate(
-                    {
-                        _id: new ObjectId(viperId),
-                        "blogs.personal._id": new ObjectId(blogId),
+            const toggleLike: WithId<Viper> | null = await this.viperCollection.findOneAndUpdate(
+                {
+                    _id: new ObjectId(viperId),
+                    "blogs.personal._id": new ObjectId(blogId),
+                },
+                {
+                    [operation]: {
+                        "blogs.personal.$.likes": { _id: new ObjectId(currentViperId) },
                     },
-                    {
-                        [operation]: {
-                            "blogs.personal.$.likes": { _id: new ObjectId(currentViperId) },
-                        },
-                    }
-                )
+                }
+            )
 
-            const addLikedBlog: Promise<WithId<Viper> | null> =
+            return toggleLike
+        } catch (error: unknown) {
+            throw new Error(`Repository Error: Failed to ${operation} blog like , ${error}`)
+        }
+    }
+    async toggleFeedLikedBlog(
+        isLiked: boolean,
+        blogId: string,
+        viperId: string,
+        currentViperId: string
+    ): Promise<WithId<Viper> | null> {
+        const operation: string = isLiked ? "$pull" : "$push"
+        try {
+            const toggleLikedBlog: Promise<WithId<Viper> | null> =
                 this.viperCollection.findOneAndUpdate(
                     {
                         _id: new ObjectId(currentViperId),
                     },
                     {
                         [operation]: {
-                            "blogs.liked": likeBlogObj,
+                            "blogs.liked": {
+                                _id: new ObjectId(blogId),
+                                viperId: new ObjectId(viperId),
+                            },
                         },
                     }
                 )
-
-            return Promise.all([addLikeToBlog, addLikedBlog])
+            return toggleLikedBlog
         } catch (error: unknown) {
-            // How can we handle different errors from each request ?
-            throw new Error(
-                `Repository Error: Failed to add like to blog or add blog to liked, ${error}`
-            )
+            throw new Error(`Repository Error: Failed to ${operation} liked blog, ${error}`)
         }
     }
-    async addCommentToBlog(
+    async addBlogComment(
         blogId: string,
         viperId: string,
         currentViperId: string,
         comment: string
-    ): Promise<[WithId<Viper> | null, WithId<Viper> | null]> {
+    ): Promise<WithId<Viper> | null> {
         try {
-            const addComment: Promise<WithId<Viper> | null> =
-                this.viperCollection.findOneAndUpdate(
-                    {
-                        _id: new ObjectId(viperId),
-                        "blogs._id": new ObjectId(blogId),
-                    },
-                    {
-                        $push: {
-                            "blogs.$.comments": {
-                                _id: new ObjectId(),
-                                viperId: new ObjectId(currentViperId),
-                                comment: comment,
-                                timestamp: Date.now(),
-                            },
+            const addComment: WithId<Viper> | null = await this.viperCollection.findOneAndUpdate(
+                {
+                    _id: new ObjectId(viperId),
+                    "blogs._id": new ObjectId(blogId),
+                },
+                {
+                    $push: {
+                        "blogs.$.comments": {
+                            _id: new ObjectId(),
+                            viperId: new ObjectId(currentViperId),
+                            content: comment,
+                            likes: [],
+                            timestamp: Date.now(),
                         },
-                    }
-                )
-            const addCommentedBlog: Promise<WithId<Viper> | null> =
-                this.viperCollection.findOneAndUpdate(
-                    {
-                        _id: new ObjectId(currentViperId),
                     },
-                    {
-                        $push: {
-                            blogCommented: {
-                                _id: new ObjectId(blogId),
-                                viperId: new ObjectId(viperId),
-                                // currentViperId: new ObjectId(currentViperId),
-                                comment: comment,
-                                timestamp: Date.now(),
-                            },
-                        },
-                    }
-                )
-            return Promise.all([addComment, addCommentedBlog])
+                }
+            )
+
+            return addComment
         } catch (error: unknown) {
             // we should manage to split the errors based on the request
-            throw new Error(
-                `Repository Error: Failed to add comment to blog or to add commented blog, ${error}`
-            )
+            throw new Error(`Repository Error: Failed to add comment to blog, ${error}`)
         }
     }
-    async toggleLikeEvent(
+    async addFeedCommentedBlog(
+        blogId: string,
+        viperId: string,
+        currentViperId: string
+    ): Promise<WithId<Viper> | null> {
+        try {
+            const addFeedBlog: WithId<Viper> | null = await this.viperCollection.findOneAndUpdate(
+                {
+                    _id: new ObjectId(currentViperId),
+                },
+                {
+                    $push: {
+                        "blogs.commented": {
+                            _id: new ObjectId(blogId),
+                            viperId: new ObjectId(viperId),
+                        },
+                    },
+                }
+            )
+            return addFeedBlog
+        } catch (error: unknown) {
+            throw new Error(`Repository Error:Failed to add commented blog into feed, ${error}`)
+        }
+    }
+    async toggleEventLike(
         isLiked: boolean,
         eventId: string,
         viperId: string
     ): Promise<WithId<Viper> | null> {
         // this func depends on a func from eventCollection
+        const operation: string = isLiked ? "$pull" : "$push"
         try {
-            const operation: string = isLiked ? "$pull" : "$push"
-
             const eventLike: WithId<Viper> | null = await this.viperCollection.findOneAndUpdate(
                 {
                     _id: new ObjectId(viperId),
@@ -372,7 +388,7 @@ export class ViperRepository implements IViperRepository {
             )
             return eventLike
         } catch (error: unknown) {
-            throw new Error(`Repository Error: Failed to add Liked Event, ${error}`)
+            throw new Error(`Repository Error: Failed to ${operation} Liked Event, ${error}`)
         }
     }
     async getLikedEvents(viperId: string): Promise<Likes[]> {
@@ -383,11 +399,11 @@ export class ViperRepository implements IViperRepository {
                         $match: { _id: new ObjectId(viperId) },
                     },
                     {
-                        $unwind: "$myEvents.likes",
+                        $unwind: "$myEvents.liked",
                     },
                     {
                         $project: {
-                            _id: "$myEvents.likes._id",
+                            _id: "$myEvents.liked._id",
                         },
                     },
                 ])
@@ -431,7 +447,9 @@ export class ViperRepository implements IViperRepository {
                 })
             return isParticipationRequested ? true : false
         } catch (error: unknown) {
-            throw new Error(`Repository Error: Failed to retrieve participation request, ${error}`)
+            throw new Error(
+                `Repository Error: Failed to check if participation is requested, ${error}`
+            )
         }
     }
     async requestEventParticipation(
@@ -440,7 +458,7 @@ export class ViperRepository implements IViperRepository {
         checkoutId: string
     ): Promise<WithId<Viper> | null> {
         try {
-            const participationRequest: WithId<Viper> | null =
+            const requestParticipation: WithId<Viper> | null =
                 await this.viperCollection.findOneAndUpdate(
                     {
                         _id: new ObjectId(viperId),
@@ -458,9 +476,9 @@ export class ViperRepository implements IViperRepository {
                     //     returnDocument: "after"
                     // }
                 )
-            return participationRequest
+            return requestParticipation
         } catch (error: unknown) {
-            throw new Error(`Repository Error: Failed to retrieve Participation request, ${error}`)
+            throw new Error(`Repository Error: Failed to request participation, ${error}`)
         }
     }
 
@@ -483,7 +501,7 @@ export class ViperRepository implements IViperRepository {
             throw new Error(`Repository Error: Failed to add created event, ${error}`)
         }
     }
-    async deleteCreatedEvent(viperId: string, eventId: string): Promise<WithId<Viper> | null> {
+    async removeCreatedEvent(viperId: string, eventId: string): Promise<WithId<Viper> | null> {
         try {
             const deletedEvent = await this.viperCollection.findOneAndUpdate(
                 {
@@ -491,7 +509,7 @@ export class ViperRepository implements IViperRepository {
                 },
                 {
                     $pull: {
-                        "myEvents.create": { _id: new ObjectId(eventId) },
+                        "myEvents.created": { _id: new ObjectId(eventId) },
                     },
                 }
             )
@@ -501,8 +519,6 @@ export class ViperRepository implements IViperRepository {
         }
     }
     async getCreatedEvents(viperId: string): Promise<CreatedEvent[]> {
-        // Check the previous func at vipers.ts
-        // should we also return an empty [] if no createdEvent is found?
         try {
             const createdEvents: CreatedEvent[] = await this.viperCollection
                 .aggregate<CreatedEvent>([

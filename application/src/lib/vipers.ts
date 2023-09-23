@@ -1,23 +1,23 @@
-import { InsertOneResult, WithId, ObjectId, WithId } from "mongodb"
-import {
-    Viper,
-    Collection,
-    Follow,
-    Blog,
-    Likes,
-    ViperBasicProps,
-    ExternalBlog,
-    MyBlog,
-    Chats,
-    UpdateViper,
-} from "@/types/viper"
-import { getCurrentViper } from "./session"
-import { Session } from "next-auth"
-import { Event } from "@/types/event"
-import { DatabaseService } from "@/services/databaseService"
+// import { InsertOneResult, WithId, ObjectId, WithId } from "mongodb"
+// import {
+//     Viper,
+//     Collection,
+//     Follow,
+//     Blog,
+//     Likes,
+//     ViperBasicProps,
+//     ExternalBlog,
+//     MyBlog,
+//     Chats,
+//     UpdateViper,
+// } from "@/types/viper"
+// import { getCurrentViper } from "./session"
+// import { Session } from "next-auth"
+// import { Event } from "@/types/event"
+// import { DatabaseService } from "@/services/databaseService"
 
-const dataBase = await DatabaseService.init()
-const viperCollection = dataBase.getViperCollection()
+// const dataBase = await DatabaseService.init()
+// const viperCollection = dataBase.getViperCollection()
 
 // export const getViperByUsername = async (username: string): Promise<Viper[] | null> => {
 //     try {
@@ -43,7 +43,7 @@ const viperCollection = dataBase.getViperCollection()
 // }
 
 export const preloadViperById = (viperId: string | ObjectId): void => {
-    // void getViperById(viperId)
+    void getViperById(viperId)
 }
 // export const getViperById = async (viperId: string | ObjectId): Promise<Viper | null> => {
 //     if (typeof viperId === "object") return null
@@ -54,7 +54,7 @@ export const preloadViperById = (viperId: string | ObjectId): void => {
 // }
 
 export const preloadViperBasicProps = (viperId: string): void => {
-    // void getViperBasicProps(viperId)
+    void getViperBasicProps(viperId)
 }
 // export const getViperBasicProps = async (viperId: string): Promise<ViperBasicProps | null> => {
 //     try {

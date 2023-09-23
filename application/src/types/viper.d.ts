@@ -1,4 +1,4 @@
-import { DeleteResult, ObjectId } from "mongodb"
+import { DeleteResult, ObjectId, WithId } from "mongodb"
 import { Event } from "./event"
 
 export type Viper = {
@@ -58,14 +58,24 @@ export type Address = {
 export type Blog = {
     personal: PersonalBlog[]
     liked: ExternalBlog[]
-    commented: ExternalBlog & { comment: string }[]
+    commented: ExternalBlog[]
 }
 
 export type PersonalBlog = {
     readonly _id: _ID
     content: string
     likes: Likes[]
-    comments: string[]
+    comments: BlogComment[]
+    timestamp: number
+}
+
+export type BlogComment = {
+    readonly _id: _ID
+    viperId: _ID
+    content: string
+    likes: Likes[]
+    // if we want to keep nesting we should uncomment the following
+    // comments: BlogComment[]
     timestamp: number
 }
 // Should be great if we add another DB or Collection for Blogs, and mostly everything
@@ -74,10 +84,6 @@ export type PersonalBlog = {
 export type ExternalBlog = {
     readonly _id: _ID
     readonly viperId: _ID
-    // we might not need ths since it will be the currentViper
-    // and we might get it from some session
-    // readonly viper_id: _ID
-    timestamp: number
 }
 
 export type Chats = {
@@ -147,43 +153,63 @@ export type UploadViperImage = {
     error: string | null
 }
 
-export interface IViperRepository {
-    getAll(): Promise<Viper[]>
-    getById(viperId: string): Promise<Viper | null>
-    getByIdBasicProps(viperId: string): Promise<ViperBasicProps | null>
+interface ViperRepositoryUser {
+    getAll(): Promise<WithId<Viper>[]>
+    getById(viperId: string): Promise<WithId<Viper> | null>
+    getByIdBasicProps(viperId: string): Promise<WithId<ViperBasicProps> | null>
     // This is one below is built for the search input
-    findByUsername(username: string): Promise<Viper[] | null>
-    update(viper: UpdateViperType): Promise<WithId<Viper> | null>
+    findByUsername(username: string): Promise<Viper[]>
+    update(viper: UpdateViper): Promise<WithId<Viper> | null>
     getFollows(viperId: string): Promise<Follow[]>
     // ====================================================
     // should we add getFollowers? check if the function already
     // getFollowers(viperId: string): Promise<Follow[]>
     // =========================================
-    isViperFollowed(currentViperId: string, viperId: string): Promise<boolean>
-    toggleFollow(
+    isViperFollowed(viperId: string, currentViperId: string): Promise<boolean>
+    toggleFollower(
         isFollowed: boolean,
         viperId: string,
         currentViperId: string
-    ): Promise<[WithId<Viper> | null, WithId<Viper> | null]>
+    ): Promise<WithId<Viper> | null>
+    toggleCurrentFollow(
+        isFollowed: boolean,
+        viperId: string,
+        currentViperId: string
+    ): Promise<WithId<Viper> | null>
     // We need to add a initChat type and function
     // initChat(viperId: string, currentViperId: string): Promise
-    getBlogs(viperId: string): Promise<WithId<Blog[]> | null>
+}
+interface ViperRepositoryBlog {
+    getBlogs(viperId: string): Promise<Blog[]>
     createBlog(viperId: string, comment: string): Promise<WithId<Viper> | null>
     isBlogLiked(blogId: string, viperId: string, currentViperId: string): Promise<boolean>
-    likeBlog(
+    toggleBlogLike(
         isLiked: boolean,
         blogId: string,
         viperId: string,
         currentViperId: string
-    ): Promise<[MWithId<Viper> | null, WithId<Viper> | null]>
-    addCommentToBlog(
+    ): Promise<WithId<Viper> | null>
+    toggleFeedLikedBlog(
+        isLiked: boolean,
+        blogId: string,
+        viperId: string,
+        currentViperId: string
+    ): Promise<WithId<Viper> | null>
+    addBlogComment(
         blogId: string,
         viperId: string,
         currentViperId: string,
         comment: string
-    ): Promise<WithId<Viper>>
-    // wonder if we should return an empty[] if it does not have any event
-    toggleLikeEvent(
+    ): Promise<WithId<Viper> | null>
+    addFeedCommentedBlog(
+        blogId: string,
+        viperId: string,
+        currentViperId: string
+    ): Promise<WithId<Viper> | null>
+}
+
+interface ViperRepositoryEvent {
+    toggleEventLike(
         isLiked: boolean,
         eventId: string,
         viperId: string
@@ -195,11 +221,11 @@ export interface IViperRepository {
         viperId: string,
         eventId: string,
         checkoutId: string
-    ): Promise<WithId<Viper>>
-    // check the name convention, we make it different because of the EventRepository, for now
-    // addCratedEvent
+    ): Promise<WithId<Viper> | null>
     addCreatedEvent(viperId: string, eventId: string): Promise<WithId<Viper> | null>
-    // removeCreatedEvent
-    deleteCreatedEvent(viperId: string, eventId: string): Promise<WithId<Viper> | null>
+    removeCreatedEvent(viperId: string, eventId: string): Promise<WithId<Viper> | null>
+    // wonder if we should return an empty[] if it does not have any event
     getCreatedEvents(viperId: string): Promise<CreatedEvent[]>
 }
+
+export type TViperRepository = ViperRepositoryUser & ViperRepositoryBlog & ViperRepositoryEvent
