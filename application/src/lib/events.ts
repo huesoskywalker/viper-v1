@@ -1,10 +1,8 @@
-// import "server-only"
-
-import { Event, Comment, Reply, UpdateEvent } from "@/types/event"
+import { Event, Comment, Reply, UpdateEvent, CreateEvent } from "@/types/event"
 import { DatabaseService } from "@/services/databaseService"
 import { existsSync } from "fs"
 import fs from "fs"
-import { ModifyResult, ObjectId, WithId } from "mongodb"
+import { WithId, ObjectId } from "mongodb"
 
 const dataBase = await DatabaseService.init()
 const eventCollection = dataBase.getEventCollection()
@@ -65,7 +63,12 @@ export async function getEventsByCategory(category: string): Promise<Event[]> {
                     image: 1,
                     likes: 1,
                 },
-                // in here we should add the sort parameter instead of using the sortBy() from above
+            },
+            // in here we should add the sort parameter instead of using the sortBy() from above
+            {
+                sort: {
+                    creationDate: 1,
+                },
             },
         ])
         .toArray()
@@ -226,8 +229,8 @@ export const isViperOnTheList = async (eventId: string, viperId: string): Promis
 export const claimEventCard = async (
     eventId: string,
     viperId: string
-): Promise<ModifyResult<Event>> => {
-    const giftCard: ModifyResult<Event> = await eventCollection.findOneAndUpdate(
+): Promise<WithId<Event> | null> => {
+    const giftCard: WithId<Event> | null = await eventCollection.findOneAndUpdate(
         {
             _id: dataBase.createObjectId(eventId),
         },
@@ -269,24 +272,25 @@ export const toggleEventLike = async (
     return likeEvent
 }
 
-export const createEvent = async (event: Event) => {
+export const createEvent = async (event: CreateEvent) => {
     const newEvent = await eventCollection.insertOne({
-        _id: event._id,
+        _id: new ObjectId(),
         organizer: event.organizer,
         title: event.title,
         content: event.content,
-        location: event.location,
         date: event.date,
+        time: event.time,
+        location: event.location,
         category: event.category,
-        creationDate: event.creationDate,
+        image: event.image,
         price: event.price,
         entries: event.entries,
-        image: event.image,
-        participants: event.participants,
-        updatedDate: event.updatedDate,
-        likes: event.likes,
-        comments: event.comments,
         product: event.product,
+        participants: [],
+        likes: [],
+        comments: [],
+        creationDate: Date.now(),
+        updatedDate: Date.now(),
     })
     return newEvent
 }
@@ -328,8 +332,8 @@ export const addComment = async (
     eventId: string,
     viperId: string,
     comment: string
-): Promise<ModifyResult<Event>> => {
-    const eventComment: ModifyResult<Event> = await eventCollection.findOneAndUpdate(
+): Promise<WithId<Event> | null> => {
+    const eventComment: WithId<Event> | null = await eventCollection.findOneAndUpdate(
         {
             _id: dataBase.createObjectId(eventId),
         },
@@ -484,8 +488,8 @@ export const addReplyToComment = async (
     commentId: string,
     viperId: string,
     comment: string
-): Promise<ModifyResult<Event>> => {
-    const addReply: ModifyResult<Event> = await eventCollection.findOneAndUpdate(
+): Promise<WithId<Event> | null> => {
+    const addReply: WithId<Event> | null = await eventCollection.findOneAndUpdate(
         {
             _id: new ObjectId(eventId),
             "comments._id": new ObjectId(commentId),

@@ -60,6 +60,7 @@ export function UpdateEventForm({
             })
             const updatedEvent = await updateEventResponse.json()
             if (!updateEventResponse.ok) {
+                // throw new Error will trigger the closest Error.ts Error Boundary
                 alert("Updating event failed")
                 return
             }

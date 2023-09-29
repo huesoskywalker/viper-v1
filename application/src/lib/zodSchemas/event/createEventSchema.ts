@@ -48,6 +48,7 @@ const productSchema = z.object({
     _id: z.string().nonempty("Product _id must be provided"),
     variant_id: z.string().nonempty("Product variant _id must be provided"),
 })
+
 const isValidTimeFormat = (value: string): boolean => {
     return /^([01]\d|2[0-3]):([0-5]\d)$/.test(value)
 }
@@ -55,18 +56,15 @@ export const createEventSchema = z.object({
     organizer: organizerSchema,
     title: z.string().nonempty("Title is required"),
     content: z.string().nonempty("Description is required"),
-    date: z
-        .date()
-        .refine(
-            (value) => {
-                const currentDate = new Date()
-                return value >= currentDate
-            },
-            {
-                message: "Date must be today or later",
-            }
-        )
-        .transform((value) => value.toISOString()),
+    date: z.date().refine(
+        (value) => {
+            const currentDate = new Date()
+            return value >= currentDate
+        },
+        {
+            message: "Date must be today or later",
+        }
+    ),
     time: z
         .string()
         .nonempty("Time is required")

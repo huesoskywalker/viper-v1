@@ -13,6 +13,7 @@ import useDisplayImage from "@/app/profile/edit/[id]/_hooks/useDisplayImage"
 import useOnPlaceChanged from "../_hooks/useOnPlaceChanged"
 import useAppendFormData from "@/app/profile/edit/[id]/_hooks/useAppendFormData"
 import { useRouter } from "next/navigation"
+import { ObjectId } from "mongodb"
 
 const CreateEventForm = () => {
     const { data: session } = useSession()
@@ -171,8 +172,12 @@ const CreateEventForm = () => {
                 if (!createEvent.ok) {
                     alert("Submitting form failed")
                     return
+                    // If we throw new Error it will trigger the closest error.ts Error Boundary
+                    // Check what we've done above
                 }
                 if (newEvent.errors) {
+                    // In here we might handle the errors that are part of the setValues lke Product
+                    // setError?
                     // We should mostly do as the updatedForm where we make a foreach in the issues
                 }
             }
@@ -182,8 +187,8 @@ const CreateEventForm = () => {
             // or revalidateTag of next.js ?
             router.refresh()
         } catch (error: unknown) {
-            // let's handle the error properly
-            console.error(error)
+            // This will trigger the closes Error.ts Error boundary?
+            throw new Error(`Failed Creating the Event`)
         }
     }
     return (
@@ -197,6 +202,9 @@ const CreateEventForm = () => {
                         className="block  p-1 w-full text-gray-900 bg-gray-50 rounded-lg border border-gray-300 sm:text-xs outline-none focus:ring-blue-500 focus:border-yellow-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:yellow-blue-500"
                         {...register("title")}
                     />
+                    {errors.title ? (
+                        <span className="text-red-500 text-xs">{`${errors.title.message}`}</span>
+                    ) : null}
                 </label>
                 <label className="block py-1">
                     <span className="text-gray-300 ml-1">Additional details</span>
@@ -206,6 +214,9 @@ const CreateEventForm = () => {
                         rows={3}
                         {...register("content")}
                     ></textarea>
+                    {errors.content ? (
+                        <span className="text-red-500 text-xs">{`${errors.content.message}`}</span>
+                    ) : null}
                 </label>
                 <label className="block py-1">
                     <span className="text-gray-300 ml-1">What type of event is it?</span>
@@ -221,6 +232,9 @@ const CreateEventForm = () => {
                         <option value={"Sports"}>Sports</option>
                         <option value={"Art"}>Art</option>
                     </select>
+                    {errors.category ? (
+                        <span className="text-red-500 text-xs">{`${errors.category.message}`}</span>
+                    ) : null}
                 </label>
                 <label className="block py-1">
                     <span className="text-gray-300 ml-1">When is your event?</span>
@@ -230,6 +244,9 @@ const CreateEventForm = () => {
                         className="block  p-1 w-full text-gray-900 bg-gray-50 rounded-lg border border-gray-300 sm:text-xs outline-none focus:ring-blue-500 focus:border-yellow-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:yellow-blue-500"
                         {...register("date")}
                     />
+                    {errors.date ? (
+                        <span className="text-red-500 text-xs">{`${errors.date.message}`}</span>
+                    ) : null}
                 </label>
                 <label className="block py-1">
                     <span className="text-gray-300 ml-1">At what time?</span>
@@ -239,6 +256,9 @@ const CreateEventForm = () => {
                         className="block  p-1 w-full text-gray-900 bg-gray-50 rounded-lg border border-gray-300 sm:text-xs outline-none focus:ring-blue-500 focus:border-yellow-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:yellow-blue-500"
                         {...register("time")}
                     />
+                    {errors.time ? (
+                        <span className="text-red-500 text-xs">{`${errors.time.message}`}</span>
+                    ) : null}
                 </label>
                 <LoadScript
                     googleMapsApiKey={`${process.env.GOOGLE_MAPS_API_KEY}`}
@@ -298,6 +318,9 @@ const CreateEventForm = () => {
                         className="block  p-1 w-full text-gray-900 bg-gray-50 rounded-lg border border-gray-300 sm:text-xs outline-none focus:ring-blue-500 focus:border-yellow-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:yellow-blue-500"
                         {...register("price")}
                     />
+                    {errors.price ? (
+                        <span className="text-red-500 text-xs">{`${errors.price.message}`}</span>
+                    ) : null}
                 </label>
                 <label className="block py-1">
                     <span className="text-gray-300 ml-1">Entries</span>
@@ -307,6 +330,9 @@ const CreateEventForm = () => {
                         className="block  p-1 w-full text-gray-900 bg-gray-50 rounded-lg border border-gray-300 sm:text-xs outline-none focus:ring-blue-500 focus:border-yellow-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:yellow-blue-500"
                         {...register("entries")}
                     />
+                    {errors.entries ? (
+                        <span className="text-red-500 text-xs">{`${errors.entries.message}`}</span>
+                    ) : null}
                 </label>
 
                 <div className={`flex justify-center`}>

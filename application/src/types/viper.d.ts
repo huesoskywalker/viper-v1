@@ -153,13 +153,16 @@ export type UploadViperImage = {
     error: string | null
 }
 
-interface ViperRepositoryUser {
+interface ViperCRUDRepository {
     getAll(): Promise<WithId<Viper>[]>
     getById(viperId: string): Promise<WithId<Viper> | null>
     getByIdBasicProps(viperId: string): Promise<WithId<ViperBasicProps> | null>
     // This is one below is built for the search input
     findByUsername(username: string): Promise<Viper[]>
     update(viper: UpdateViper): Promise<WithId<Viper> | null>
+}
+
+interface ViperFollowRepository {
     getFollows(viperId: string): Promise<Follow[]>
     // ====================================================
     // should we add getFollowers? check if the function already
@@ -177,9 +180,10 @@ interface ViperRepositoryUser {
         currentViperId: string
     ): Promise<WithId<Viper> | null>
     // We need to add a initChat type and function
+    // ======IMPORTANT=====
     // initChat(viperId: string, currentViperId: string): Promise
 }
-interface ViperRepositoryBlog {
+interface ViperBlogRepository {
     getBlogs(viperId: string): Promise<Blog[]>
     createBlog(viperId: string, comment: string): Promise<WithId<Viper> | null>
     isBlogLiked(blogId: string, viperId: string, currentViperId: string): Promise<boolean>
@@ -208,7 +212,7 @@ interface ViperRepositoryBlog {
     ): Promise<WithId<Viper> | null>
 }
 
-interface ViperRepositoryEvent {
+interface ViperEventRepository {
     toggleEventLike(
         isLiked: boolean,
         eventId: string,
@@ -228,4 +232,7 @@ interface ViperRepositoryEvent {
     getCreatedEvents(viperId: string): Promise<CreatedEvent[]>
 }
 
-export type TViperRepository = ViperRepositoryUser & ViperRepositoryBlog & ViperRepositoryEvent
+export type TViperRepository = ViperCRUDRepository &
+    ViperFollowRepository &
+    ViperBlogRepository &
+    ViperEventRepository

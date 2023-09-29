@@ -2,7 +2,6 @@ import {
     Blog,
     CreatedEvent,
     EventCollection,
-    ExternalBlog,
     Follow,
     Likes,
     TViperRepository,

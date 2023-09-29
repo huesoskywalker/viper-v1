@@ -5,18 +5,16 @@ export const updateEventSchema = z.object({
     _id: z.string().transform((value) => value as _ID),
     title: z.string().nonempty("Title is required"),
     content: z.string().nonempty("Description is required"),
-    date: z
-        .date()
-        .refine(
-            (value) => {
-                const currentDate = new Date()
-                return value >= currentDate
-            },
-            {
-                message: "Date must be today or later",
-            }
-        )
-        .transform((value) => value.toISOString()),
+    date: z.date().refine(
+        (value) => {
+            const currentDate = new Date()
+            return value >= currentDate
+        },
+        {
+            message: "Date must be today or later",
+        }
+    ),
+    // .transform((value) => value.toISOString())
     category: z.string().nonempty("Category is required"),
     price: z
         .number()

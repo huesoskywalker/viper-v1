@@ -7,7 +7,8 @@ export type Event = {
     organizer: Organizer
     title: Title
     content: Content
-    date: Date
+    date: EventDate
+    time: EventTime
     location: Location
     category: Category
     image: Image
@@ -17,15 +18,35 @@ export type Event = {
     participants: Participants[]
     likes: Likes[]
     comments: Comment[]
-    creationDate: Date
-    updatedDate: Date
+    creationDate: EventDate
+    updatedDate: EventDate
 }
 
+export type UpdateEvent = Pick<
+    Event,
+    "_id" | "title" | "content" | "date" | "category" | "updatedDate" | "price"
+>
+export type CreateEvent = Pick<
+    Event,
+    | "organizer"
+    | "title"
+    | "content"
+    | "date"
+    | "time"
+    | "location"
+    | "category"
+    | "image"
+    | "price"
+    | "entries"
+    | "product"
+>
 type Title = string
 
 type Content = string
 
-type Date = string | number
+type EventDate = Date | number
+
+type EventTime = string
 
 type Category = string
 
@@ -57,14 +78,14 @@ export type Organizer = {
     email: string
 }
 export type Participants = {
-    readonly _id: ObjectId | string
+    readonly _id: _ID
 }
 export type Likes = {
-    readonly _id: ObjectId | string
+    readonly _id: _ID
 }
 export type Comment = {
-    readonly _id: ObjectId | string
-    viperId: ObjectId | string
+    readonly _id: _ID
+    viperId: _ID
     text: string
     likes: Likes[]
     replies: Reply[]
@@ -84,11 +105,6 @@ export type Product = {
     variant_id: string
 }
 
-export type UpdateEvent = Pick<
-    Event,
-    "_id" | "title" | "content" | "date" | "category" | "updatedDate" | "price"
->
-
 export type UploadEventImage = {
     data: {
         url: string
@@ -99,29 +115,27 @@ export type UploadEventImage = {
     error: string | null
 }
 
-export type IEventRepository = {
-    getAll(): Promise<Eventtype[]>
-    getById(eventId: string): Promise<Eventtype | null>
-    getByCategory(category: string): Promise<Eventtype[]>
-    getComments(eventId: string): Promise<Comments[] | null>
-    // we should fix this and instead of using aggregate to return an array we should match the commentId
-    getCommentById(eventId: string, commentId: string): Promise<Comments | null>
-    getCommentReplies(eventId: string, commentId: string, viperId: string): Promise<Reply[]>
-    isViperParticipant(eventId: string, viperId: string): Promise<boolean>
-    // this from below is the claimCard function
-    addParticipant(eventId: string, viperId: string): Promise<ModifyResult<Eventtype>>
+interface EventCRUDRepository {
+    getAll(): Promise<Event[]>
+    getById(eventId: string): Promise<Event | null>
+    getByCategory(category: string): Promise<Event[]>
+    create(event: Event): Promise<InsertOneResult<Event>>
+    update(event: EditEvent): Promise<ModifyResult<Event>>
+    delete(eventId: string, eventImage: string): Promise<DeleteResult>
+}
+
+interface EventInteractionRepository {
     isLiked(eventId: string, viperId: string): Promise<boolean>
     toggleEventLike(
         eventId: string,
         viperId: string,
         operation: string
-    ): Promise<ModifyResult<Eventtype>>
-    // addLike(eventId: string, viperId: string): Promise<ModifyResult<Eventtype>>
-    // removeLike(eventId: string, viperId: string): Promise<ModifyResult<Eventtype>>
-    create(event: Eventtype): Promise<InsertOneResult<Eventtype>>
-    update(event: EditEventType): Promise<ModifyResult<Eventtype>>
-    delete(eventId: string, eventImage: string): Promise<DeleteResult>
-    addComment(eventId: string, viperId: string, comment: string): Promise<ModifyResult<Eventtype>>
+    ): Promise<ModifyResult<Event>>
+    getComments(eventId: string): Promise<Comments[] | null>
+    // we should fix this and instead of using aggregate to return an array we should match the commentId
+    getCommentById(eventId: string, commentId: string): Promise<Comments | null>
+    getCommentReplies(eventId: string, commentId: string, viperId: string): Promise<Reply[]>
+    addComment(eventId: string, viperId: string, comment: string): Promise<ModifyResult<Event>>
     // Wonder if we need this, we use it to set the operation = "$push" | "$pull" is there a better approach?
     isCommentLiked(eventId: string, commentId: string, viperId: string): Promise<boolean>
     toggleLikeOnComment(
@@ -129,7 +143,7 @@ export type IEventRepository = {
         commentId: string,
         viperId: string,
         operation: "$push" | "$pull"
-    ): Promise<ModifyResult<Eventtype>>
+    ): Promise<ModifyResult<Event>>
     // same in here that the previous function isCommentLiked
     isCommentReplyLiked(
         eventId: string,
@@ -143,11 +157,21 @@ export type IEventRepository = {
         replyId: string,
         viperId: string,
         operation: "$push" | "$pull"
-    ): Promise<ModifyResult<Eventtype>>
+    ): Promise<ModifyResult<Event>>
     addReplyToComment(
         eventId: string,
         commentId: string,
         viperId: string,
         comment: string
-    ): Promise<ModifyResult<Eventtype>>
+    ): Promise<ModifyResult<Event>>
 }
+
+interface EventParticipantRepository {
+    isViperParticipant(eventId: string, viperId: string): Promise<boolean>
+    // this from below is the claimCard function
+    addParticipant(eventId: string, viperId: string): Promise<ModifyResult<Event>>
+}
+
+export type TEventRepository = EventBasicRepository &
+    EventInteractionRepository &
+    EventParticipantRepository

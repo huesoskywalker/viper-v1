@@ -12,6 +12,7 @@ import { preloadViperBasicProps, preloadIsViperParticipationRequest } from "@/li
 import { preloadIsCheckoutFulfilled } from "../../../helpers/isCheckoutFulFilled"
 import { AddLike } from "./AddLike"
 import AddComment from "./AddComment"
+import { notFound } from "next/navigation"
 
 export async function Event({ eventId }: { eventId: string }): Promise<JSX.Element> {
     const likedCookie: string = cookies().get("_is_liked")?.value || "none"
@@ -25,10 +26,14 @@ export async function Event({ eventId }: { eventId: string }): Promise<JSX.Eleme
     })
 
     const [viperSession, selectedEventData] = await Promise.all([viperPromise, eventPromise])
-    if (!viperSession)
-        return <div className="text-yellow-400 text-sm"> remove this from Event</div>
-    // Gotta handle this better
-    // throw new Error(`No viper bro`)
+    if (!viperSession) {
+        // This will Render the closest Error.ts Error Boundary
+        throw new Error(`No viper bro`)
+    }
+    if (!selectedEventData) {
+        // Render the closest `not-found.js` Error Boundary
+        notFound()
+    }
     const selectedEvent: Event = await selectedEventData.json()
     // const selectedEvent = selectedEvent
     if (!selectedEvent) return <div className="text-yellow-400 text-sm">Build up, from Event</div>
