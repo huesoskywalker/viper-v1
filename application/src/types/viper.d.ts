@@ -158,7 +158,7 @@ interface ViperCRUDRepository {
     getById(viperId: string): Promise<WithId<Viper> | null>
     getByIdBasicProps(viperId: string): Promise<WithId<ViperBasicProps> | null>
     // This is one below is built for the search input
-    findByUsername(username: string): Promise<Viper[]>
+    findByUsername(username: string): Promise<ViperBasicProps[]>
     update(viper: UpdateViper): Promise<WithId<Viper> | null>
 }
 

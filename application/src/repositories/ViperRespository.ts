@@ -60,7 +60,7 @@ export class ViperRepository implements TViperRepository {
             throw new Error(`Repository Error: Failed to retrieve Viper basic Props, ${error}`)
         }
     }
-    async findByUsername(username: string): Promise<Viper[]> {
+    async findByUsername(username: string): Promise<ViperBasicProps[]> {
         try {
             await this.viperCollection.createIndexes([
                 {
@@ -70,11 +70,26 @@ export class ViperRepository implements TViperRepository {
             ])
 
             const vipers: Viper[] = await this.viperCollection
-                .find<Viper>({
-                    $text: {
-                        $search: username,
+                .find<Viper>(
+                    {
+                        $text: {
+                            $search: username,
+                        },
                     },
-                })
+                    {
+                        projection: {
+                            _id: 1,
+                            name: 1,
+                            image: 1,
+                            backgroundImage: 1,
+                            email: 1,
+                            address: 1,
+                            biography: 1,
+                            followers: 1,
+                            follows: 1,
+                        },
+                    }
+                )
                 .toArray()
 
             return vipers

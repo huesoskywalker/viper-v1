@@ -1,4 +1,4 @@
-import { DeleteResult, InsertOneResult, ModifyResult, ObjectId } from "mongodb"
+import { DeleteResult, InsertOneResult, WithId, ObjectId } from "mongodb"
 import { FormattedAddress, FormattedAddressURL, LatLngLiteral } from "./google-maps-api"
 import { _ID } from "./viper"
 
@@ -15,8 +15,8 @@ export type Event = {
     price: Price
     entries: Entries
     product: Product
-    participants: Participants[]
-    likes: Likes[]
+    participants: Participant[]
+    likes: Like[]
     comments: Comment[]
     creationDate: EventDate
     updatedDate: EventDate
@@ -77,17 +77,17 @@ export type Organizer = {
     name: string
     email: string
 }
-export type Participants = {
+export type Participant = {
     readonly _id: _ID
 }
-export type Likes = {
+export type Like = {
     readonly _id: _ID
 }
 export type Comment = {
     readonly _id: _ID
     viperId: _ID
     text: string
-    likes: Likes[]
+    likes: Like[]
     replies: Reply[]
     timestamp: number
 }
@@ -96,7 +96,7 @@ export type Reply = {
     readonly _id: Object
     viperId: string
     reply: string
-    likes: likes[]
+    likes: Like[]
     timestamp: number
 }
 
@@ -119,31 +119,32 @@ interface EventCRUDRepository {
     getAll(): Promise<Event[]>
     getById(eventId: string): Promise<Event | null>
     getByCategory(category: string): Promise<Event[]>
-    create(event: Event): Promise<InsertOneResult<Event>>
-    update(event: EditEvent): Promise<ModifyResult<Event>>
+    create(event: CreateEvent): Promise<InsertOneResult<Event>>
+    update(event: UpdateEvent): Promise<WithId<Event> | null>
     delete(eventId: string, eventImage: string): Promise<DeleteResult>
 }
 
 interface EventInteractionRepository {
     isLiked(eventId: string, viperId: string): Promise<boolean>
     toggleEventLike(
+        isLiked: boolean,
         eventId: string,
-        viperId: string,
-        operation: string
-    ): Promise<ModifyResult<Event>>
-    getComments(eventId: string): Promise<Comments[] | null>
+        viperId: string
+    ): Promise<WithId<Event> | null>
+    getComments(eventId: string): Promise<Comment[]>
     // we should fix this and instead of using aggregate to return an array we should match the commentId
-    getCommentById(eventId: string, commentId: string): Promise<Comments | null>
-    getCommentReplies(eventId: string, commentId: string, viperId: string): Promise<Reply[]>
-    addComment(eventId: string, viperId: string, comment: string): Promise<ModifyResult<Event>>
+    // ALSO the return value
+    getCommentById(eventId: string, commentId: string): Promise<Comment | null>
     // Wonder if we need this, we use it to set the operation = "$push" | "$pull" is there a better approach?
     isCommentLiked(eventId: string, commentId: string, viperId: string): Promise<boolean>
     toggleLikeOnComment(
+        isLiked: boolean,
         eventId: string,
         commentId: string,
-        viperId: string,
-        operation: "$push" | "$pull"
-    ): Promise<ModifyResult<Event>>
+        viperId: string
+    ): Promise<WithId<Event> | null>
+    addComment(eventId: string, viperId: string, comment: string): Promise<WithId<Event> | null>
+    getCommentReplies(eventId: string, commentId: string): Promise<Reply[] | null>
     // same in here that the previous function isCommentLiked
     isCommentReplyLiked(
         eventId: string,
@@ -152,26 +153,26 @@ interface EventInteractionRepository {
         viperId: string
     ): Promise<boolean>
     toggleLikeOnCommentReply(
+        isLiked: boolean,
         eventId: string,
         commentId: string,
         replyId: string,
-        viperId: string,
-        operation: "$push" | "$pull"
-    ): Promise<ModifyResult<Event>>
+        viperId: string
+    ): Promise<WithId<Event> | null>
     addReplyToComment(
         eventId: string,
         commentId: string,
         viperId: string,
         comment: string
-    ): Promise<ModifyResult<Event>>
+    ): Promise<WithId<Event> | null>
 }
 
 interface EventParticipantRepository {
     isViperParticipant(eventId: string, viperId: string): Promise<boolean>
     // this from below is the claimCard function
-    addParticipant(eventId: string, viperId: string): Promise<ModifyResult<Event>>
+    addParticipant(eventId: string, viperId: string): Promise<WithId<Event> | null>
 }
 
-export type TEventRepository = EventBasicRepository &
+export type TEventRepository = EventCRUDRepository &
     EventInteractionRepository &
     EventParticipantRepository
