@@ -118,7 +118,7 @@ export type UploadEventImage = {
 interface EventCRUDRepository {
     getAll(): Promise<Event[]>
     getById(eventId: string): Promise<Event | null>
-    getByCategory(category: string): Promise<Event[]>
+    getByCategory(category: string, sortParam: "likes" | "date" | "creationDate"): Promise<Event[]>
     create(event: CreateEvent): Promise<InsertOneResult<Event>>
     update(event: UpdateEvent): Promise<WithId<Event> | null>
     delete(eventId: string, eventImage: string): Promise<DeleteResult>
@@ -144,7 +144,7 @@ interface EventInteractionRepository {
         viperId: string
     ): Promise<WithId<Event> | null>
     addComment(eventId: string, viperId: string, comment: string): Promise<WithId<Event> | null>
-    getCommentReplies(eventId: string, commentId: string): Promise<Reply[] | null>
+    getCommentReplies(eventId: string, commentId: string): Promise<Reply[]>
     // same in here that the previous function isCommentLiked
     isCommentReplyLiked(
         eventId: string,

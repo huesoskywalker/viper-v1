@@ -20,6 +20,7 @@ export class EventRepository implements TEventRepository {
         // This is kind of EventBasicProps
         // aggregate or find?
         // sortBy creationDate or date?
+        // find().project<EventBasicProps>()
         try {
             const events: Event[] = await this.eventCollection
                 .aggregate<Event>([
@@ -56,35 +57,51 @@ export class EventRepository implements TEventRepository {
             throw new Error(`Repository Error: Failed to get event by _id, ${error}`)
         }
     }
-    async getByCategory(category: string, sortBy?: "likes" | "date"): Promise<Event[]> {
+    async getByCategory(
+        category: string,
+        sortBy: "likes" | "date" | "creationDate"
+    ): Promise<Event[]> {
         const sortParam: string = sortBy ? sortBy : "creationDate"
         try {
             // find or aggregate will perform better?
-            // find $elemMatch
             // .explain()
-            const event: Event[] = await this.eventCollection
-                .aggregate<Event>([
-                    {
-                        $match: { category: category },
-                    },
-                    {
-                        $project: {
-                            _id: 1,
-                            title: 1,
-                            content: 1,
-                            location: 1,
-                            date: 1,
-                            category: 1,
-                            image: 1,
-                            likes: 1,
-                        },
-                    },
-                    {
-                        sort: {
-                            [sortParam]: 1,
-                        },
-                    },
-                ])
+            const event = await this.eventCollection
+                // .aggregate<Event>([
+                .find<Event>({ category: category })
+                // This should be EventBasicProps
+                .project<Event>({
+                    _id: 1,
+                    title: 1,
+                    content: 1,
+                    location: 1,
+                    date: 1,
+                    category: 1,
+                    image: 1,
+                    likes: 1,
+                })
+                .sort({ [sortParam]: 1 })
+                // {
+                //     $match: { category: category },
+                // },
+                // {
+                //     $project: {
+                //         _id: 1,
+                //         title: 1,
+                //         content: 1,
+                //         location: 1,
+                //         date: 1,
+                //         category: 1,
+                //         image: 1,
+                //         likes: 1,
+                //     },
+                // },
+                //     {
+                //         sort: {
+                //             [sortParam]: 1,
+                //         },
+                //     },
+                // ])
+                .limit(20)
                 .toArray()
 
             return event
@@ -120,7 +137,7 @@ export class EventRepository implements TEventRepository {
     }
     async update(event: UpdateEvent): Promise<WithId<Event> | null> {
         try {
-            const editedEvent: WithId<Event> | null = await this.eventCollection.findOneAndUpdate(
+            const updatedEvent: WithId<Event> | null = await this.eventCollection.findOneAndUpdate(
                 {
                     _id: new ObjectId(event._id),
                 },
@@ -135,14 +152,14 @@ export class EventRepository implements TEventRepository {
                     },
                 }
             )
-            return editedEvent
+            return updatedEvent
         } catch (error: unknown) {
             throw new Error(`Repository Error: Failed to update event, ${error}`)
         }
     }
     async delete(eventId: string, eventImage: string): Promise<DeleteResult> {
         try {
-            const deletedEvent = await this.eventCollection.deleteOne({
+            const deletedEvent: DeleteResult = await this.eventCollection.deleteOne({
                 _id: new ObjectId(eventId),
             })
             fs.rmSync(`public/uploads/events/${eventImage}`)
@@ -153,9 +170,8 @@ export class EventRepository implements TEventRepository {
         }
     }
     async isLiked(eventId: string, viperId: string): Promise<boolean> {
-        // check projection and find how to return _ID type
         try {
-            const isLiked: WithId<Event> | null = await this.eventCollection.findOne(
+            const isLiked: _ID | null = await this.eventCollection.findOne<_ID>(
                 {
                     _id: new ObjectId(eventId),
                     "likes._id": new ObjectId(viperId),
@@ -178,7 +194,7 @@ export class EventRepository implements TEventRepository {
     ): Promise<WithId<Event> | null> {
         const operation: string = isLiked ? "$push" : "$pull"
         try {
-            const likeEvent: WithId<Event> | null = await this.eventCollection.findOneAndUpdate(
+            const toggleLike: WithId<Event> | null = await this.eventCollection.findOneAndUpdate(
                 {
                     _id: new ObjectId(eventId),
                 },
@@ -196,7 +212,7 @@ export class EventRepository implements TEventRepository {
                     },
                 }
             )
-            return likeEvent
+            return toggleLike
         } catch (error: unknown) {
             throw new Error(`Repository Error: Failed to toggle event like, ${error}`)
         }
@@ -204,8 +220,6 @@ export class EventRepository implements TEventRepository {
     async getComments(eventId: string): Promise<Comment[]> {
         try {
             const eventComments: Comment[] = await this.eventCollection
-
-                // We should findOne in here and project the comments?
                 .aggregate<Comment>([
                     {
                         $match: { _id: new ObjectId(eventId) },
@@ -224,7 +238,11 @@ export class EventRepository implements TEventRepository {
                         },
                     },
                 ])
+                // this is for pagination, each page does have the limit we assign
+                // .skip()
+                .limit(10)
                 .toArray()
+
             return eventComments
         } catch (error: unknown) {
             throw new Error(`Repository Error: Failed to get event comment, ${error}`)
@@ -252,7 +270,7 @@ export class EventRepository implements TEventRepository {
         // Check with the aggregation pipeline and the unwinds if it will be more efficient
         // than this query
         try {
-            const isLiked: Comment | null = await this.eventCollection.findOne<Comment>(
+            const isLiked: _ID | null = await this.eventCollection.findOne<_ID>(
                 {
                     _id: new ObjectId(eventId),
                     "comments._id": new ObjectId(commentId),
@@ -260,8 +278,8 @@ export class EventRepository implements TEventRepository {
                 },
                 {
                     projection: {
-                        _id: "comments.likes.$._id",
-                        // "comments.likes.$._id": 1,
+                        _id: "comments.likes._id",
+                        // _id: "comments.likes.$._id",
                     },
                 }
             )
@@ -287,8 +305,17 @@ export class EventRepository implements TEventRepository {
                     [operation]: {
                         "comments.$.likes": { _id: new ObjectId(viperId) },
                     },
+                },
+                {
+                    projection: {
+                        _id: "comments._id",
+                        likes: "comments.likes",
+                    },
                 }
             )
+            // Something like this to return the actual values from the Projection
+            // const value = toggleLike?.comments[0].likes as Like[]
+            // return value
             return toggleLike
         } catch (error: unknown) {
             throw new Error(`Repository Error: Failed to toggle like on comment, ${error}`)
@@ -300,7 +327,7 @@ export class EventRepository implements TEventRepository {
         comment: string
     ): Promise<WithId<Event> | null> {
         try {
-            const eventComment: WithId<Event> | null = await this.eventCollection.findOneAndUpdate(
+            const newComment: WithId<Event> | null = await this.eventCollection.findOneAndUpdate(
                 {
                     _id: new ObjectId(eventId),
                 },
@@ -316,33 +343,47 @@ export class EventRepository implements TEventRepository {
                             timestamp: Date.now(),
                         },
                     },
+                },
+                {
+                    projection: {
+                        _id: 1,
+                        comments: 1,
+                    },
                 }
             )
-            return eventComment
+            return newComment
         } catch (error: unknown) {
             throw new Error(`Repository Error: Failed to add comment, ${error}`)
         }
     }
-    async getCommentReplies(eventId: string, commentId: string): Promise<Reply[] | null> {
+    async getCommentReplies(eventId: string, commentId: string): Promise<Reply[]> {
         try {
-            const eventReplies: Reply[] | null = await this.eventCollection.findOne<Reply[]>(
-                {
-                    _id: new ObjectId(eventId),
-                    "comments._id": new ObjectId(commentId),
-                },
-                {
-                    projection: {
-                        _id: 0,
-                        replies: "comments.$.replies",
-                        // "comments.$.replies": 1,
+            const eventReplies: Reply[] = await this.eventCollection
+                // most probably we would need to change it to aggregate
+                // to handle the projection
+                .find<Reply>(
+                    {
+                        _id: new ObjectId(eventId),
+                        "comments._id": new ObjectId(commentId),
                     },
-                }
-            )
+                    {
+                        projection: {
+                            _id: "comments.replies._id",
+                            viperId: "comments.replies.viperId",
+                            reply: "comments.replies.reply",
+                            likes: "comments.replies.likes",
+                            timestamp: "comments.replies.timestamp",
+                        },
+                    }
+                )
+                .limit(10)
+                .toArray()
             return eventReplies
         } catch (error: unknown) {
             throw new Error(`Repository Error: Failed to comment the reply, ${error}`)
         }
     }
+    // we could change this name to isReplyLiked ?
     async isCommentReplyLiked(
         eventId: string,
         commentId: string,
@@ -360,7 +401,6 @@ export class EventRepository implements TEventRepository {
                 {
                     projection: {
                         _id: "comments.replies.likes._id",
-                        // "comments.replies.likes._id": 1,
                     },
                 }
             )
@@ -370,7 +410,7 @@ export class EventRepository implements TEventRepository {
             throw new Error(`Repository Error: Failed to check if reply is liked, ${error}`)
         }
     }
-
+    // should we change this to toggleLikeOnReply?
     async toggleLikeOnCommentReply(
         isLiked: boolean,
         eventId: string,
@@ -378,9 +418,9 @@ export class EventRepository implements TEventRepository {
         replyId: string,
         viperId: string
     ): Promise<WithId<Event> | null> {
-        // need to figure out how to solve the issue about the projection and the type
         const operation: string = isLiked ? "$pull" : "$push"
         try {
+            // need to figure out how to solve the issue about the projection and the type
             const toggleLike: WithId<Event> | null = await this.eventCollection.findOneAndUpdate(
                 {
                     _id: new ObjectId(eventId),
@@ -403,15 +443,19 @@ export class EventRepository implements TEventRepository {
                     ],
                     projection: {
                         _id: "comments.replies.likes._id",
+                        // likes: "comment.replies.likes"
                     },
                 }
             )
             return toggleLike
+            // return toggleLIke ? { _id: toggleLike._id } : null
+            // or
+            // return toggleLike ? { likes: toggleLike.likes } : null
         } catch (error: unknown) {
             throw new Error(`Repository Error: Failed to toggle like on reply, ${error}`)
         }
-        // return toggleLIke ? { _id: toggleLike._id } : null
     }
+    // we could also change to addReply
     async addReplyToComment(
         eventId: string,
         commentId: string,
@@ -434,13 +478,15 @@ export class EventRepository implements TEventRepository {
                             timestamp: Date.now(),
                         },
                     },
+                },
+                {
+                    projection: {
+                        replies: "comments.replies",
+                        // replies: {
+                        //     $slice: -1,
+                        // },
+                    },
                 }
-                // {
-                //     projection: {
-                //         // should we add the projection of the replies ?
-                //         // indeed we could avoid returning all the doc
-                //     },
-                // }
             )
             return addReply
         } catch (error: unknown) {
@@ -469,19 +515,25 @@ export class EventRepository implements TEventRepository {
     }
     async addParticipant(eventId: string, viperId: string): Promise<WithId<Event> | null> {
         try {
-            const participant: WithId<Event> | null = await this.eventCollection.findOneAndUpdate(
-                {
-                    _id: new ObjectId(eventId),
-                },
-                {
-                    $push: {
-                        participants: {
-                            _id: new ObjectId(viperId),
+            const newParticipant: WithId<Event> | null =
+                await this.eventCollection.findOneAndUpdate(
+                    {
+                        _id: new ObjectId(eventId),
+                    },
+                    {
+                        $push: {
+                            participants: {
+                                _id: new ObjectId(viperId),
+                            },
                         },
                     },
-                }
-            )
-            return participant
+                    {
+                        projection: {
+                            participants: "participants",
+                        },
+                    }
+                )
+            return newParticipant
         } catch (error: unknown) {
             throw new Error(`Repository Error: Failed to add Participant, ${error}`)
         }

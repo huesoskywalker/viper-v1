@@ -213,7 +213,7 @@ interface ViperBlogRepository {
 }
 
 interface ViperEventRepository {
-    toggleEventLike(
+    toggleLikedEvent(
         isLiked: boolean,
         eventId: string,
         viperId: string

@@ -16,6 +16,7 @@ export class ViperRepository implements TViperRepository {
     constructor(database: Db) {
         this.viperCollection = database.collection<Viper>("users")
     }
+    // We need to add the getServerSession()
     async getAll(): Promise<WithId<Viper>[]> {
         try {
             const vipers: WithId<Viper>[] = await this.viperCollection.find({}).toArray()
@@ -391,7 +392,7 @@ export class ViperRepository implements TViperRepository {
             throw new Error(`Repository Error:Failed to add commented blog into feed, ${error}`)
         }
     }
-    async toggleEventLike(
+    async toggleLikedEvent(
         isLiked: boolean,
         eventId: string,
         viperId: string
@@ -399,7 +400,7 @@ export class ViperRepository implements TViperRepository {
         // this func depends on a func from eventCollection
         const operation: string = isLiked ? "$pull" : "$push"
         try {
-            const eventLike: WithId<Viper> | null = await this.viperCollection.findOneAndUpdate(
+            const toggleLike: WithId<Viper> | null = await this.viperCollection.findOneAndUpdate(
                 {
                     _id: new ObjectId(viperId),
                 },
@@ -411,7 +412,7 @@ export class ViperRepository implements TViperRepository {
                     },
                 }
             )
-            return eventLike
+            return toggleLike
         } catch (error: unknown) {
             throw new Error(`Repository Error: Failed to ${operation} Liked Event, ${error}`)
         }

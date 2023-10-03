@@ -163,10 +163,15 @@ export class ViperModel {
             )
         }
     }
-    async toggleLikeEvent(eventId: string, viperId: string): Promise<WithId<Viper> | null> {
-        // We need to grab the eventRepository to check if the event isLiked
+    async toggleLikedEvent(
+        isLiked: boolean,
+        eventId: string,
+        viperId: string
+    ): Promise<WithId<Viper> | null> {
+        // CHECK if it useful this way and pass the return value from EventModel.isLiked()
+        // or if we should use the EventRepository in here
         try {
-            const toggleLike: WithId<Viper> | null = await this.viperRepository.toggleEventLike(
+            const toggleLike: WithId<Viper> | null = await this.viperRepository.toggleLikedEvent(
                 isLiked,
                 eventId,
                 viperId
