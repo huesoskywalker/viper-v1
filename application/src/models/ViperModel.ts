@@ -29,18 +29,20 @@ export class ViperModel {
             throw new Error(`Model Error: Failed to retrieve Viper by Id ${error}`)
         }
     }
-    async getByIdBasicProps(viperId: string): Promise<ViperBasicProps | null> {
+    async getByIdBasicProps(viperId: string): Promise<WithId<ViperBasicProps> | null> {
         try {
-            const viperBasicProps: ViperBasicProps | null =
+            const viperBasicProps: WithId<ViperBasicProps> | null =
                 await this.viperRepository.getByIdBasicProps(viperId)
             return viperBasicProps
         } catch (error: unknown) {
             throw new Error(`Model Error: Failed to retrieve Viper basic Props, ${error}`)
         }
     }
-    async findByUsername(username: string): Promise<WithId<Viper>[]> {
+    async findByUsername(username: string): Promise<WithId<ViperBasicProps>[]> {
         try {
-            const vipers: WithId<Viper>[] = await this.viperRepository.findByUsername(username)
+            const vipers: WithId<ViperBasicProps>[] = await this.viperRepository.findByUsername(
+                username
+            )
             return vipers
         } catch (error: unknown) {
             throw new Error(`Model Error: Failed to find Viper by Username, ${error}`)

@@ -35,7 +35,7 @@ export class ViperRepository implements TViperRepository {
             throw new Error(`Repository Error: Failed to retrieve Viper by Id, ${error}`)
         }
     }
-    async getByIdBasicProps(viperId: string): Promise<ViperBasicProps | null> {
+    async getByIdBasicProps(viperId: string): Promise<WithId<ViperBasicProps> | null> {
         try {
             const viperBasicProps: WithId<Viper> | null = await this.viperCollection.findOne(
                 {
@@ -144,10 +144,17 @@ export class ViperRepository implements TViperRepository {
     }
     async isViperFollowed(viperId: string, currentViperId: string): Promise<boolean> {
         try {
-            const isFollowed: WithId<Viper> | null = await this.viperCollection.findOne({
-                _id: new ObjectId(viperId),
-                "followers._id": new ObjectId(currentViperId),
-            })
+            const isFollowed: WithId<Viper> | null = await this.viperCollection.findOne(
+                {
+                    _id: new ObjectId(viperId),
+                    "followers._id": new ObjectId(currentViperId),
+                },
+                {
+                    projection: {
+                        _id: 1,
+                    },
+                }
+            )
             return isFollowed ? true : false
         } catch (error: unknown) {
             throw new Error(
@@ -267,6 +274,10 @@ export class ViperRepository implements TViperRepository {
                         "likes._id": new ObjectId(currentViperId),
                     },
                 },
+
+                projection: {
+                    _id: "likes._id",
+                },
             })
             return isLiked ? true : false
         } catch (error: unknown) {
@@ -306,8 +317,8 @@ export class ViperRepository implements TViperRepository {
     ): Promise<WithId<Viper> | null> {
         const operation: string = isLiked ? "$pull" : "$push"
         try {
-            const toggleLikedBlog: Promise<WithId<Viper> | null> =
-                this.viperCollection.findOneAndUpdate(
+            const toggleLikedBlog: WithId<Viper> | null =
+                await this.viperCollection.findOneAndUpdate(
                     {
                         _id: new ObjectId(currentViperId),
                     },
