@@ -35,13 +35,16 @@ export async function EventCommentsCard({
 }) {
     const viper_id: string = viperId.replace(/['"]+/g, "")
     const comment_id: string = commentId.replace(/['"]+/g, "")
-    const response = await fetch(`/api/viper/${viper_id}?props=basic-props`, {
+    const response = await fetch(`http://localhost:3000/api/viper/${viper_id}?props=basic-props`, {
         method: "GET",
         headers: {
             "content-type": "application/json; charset=utf-8",
         },
     })
     const viper: ViperBasicProps = await response.json()
+    console.log(`=============================viper eventcomment Card`)
+    console.log(viper)
+    console.log(viper.image)
 
     if (!viper) throw new Error("No viper bro")
     const likedCookie = cookies().get(`_${reply ? replyId : comment_id}_is_liked`)?.value || "none"
@@ -59,8 +62,8 @@ export async function EventCommentsCard({
                             <Link href={`/dashboard/vipers/${viper_id}`}>
                                 <Image
                                     data-test="viper-image"
-                                    src={`/vipers/${viper.image}`}
-                                    alt={`/vipers/${viper.image}`}
+                                    src={`${viper.image}`}
+                                    alt={`${viper.image}`}
                                     width={50}
                                     height={50}
                                     className="rounded-full "

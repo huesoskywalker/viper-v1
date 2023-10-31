@@ -2,8 +2,20 @@ import "./globals.css"
 import type { ReactNode } from "react"
 import AuthProvider from "./_components/AuthProvider"
 import GlobalNav from "./_components/GlobalNav"
+import { MongoDBConnection } from "@/config/MongoDBConnection"
+import { RepositoryFactory } from "@/repositories/RepositoryFactory"
+import { EventRepository } from "@/repositories/EventRepository"
+import { EventService } from "@/services/EventService"
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
+    const database = await MongoDBConnection.getInstance()
+    const viperDb = database.getViperDatabase()
+
+    const factoryInstance = RepositoryFactory.getInstance()
+
+    const { eventRepository, viperRepository } = factoryInstance.initializeRepositories(viperDb)
+    const eventService = new EventService(eventRepository)
+
     return (
         <html>
             <body className="overflow-y-scroll bg-gray-900">

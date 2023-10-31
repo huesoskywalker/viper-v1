@@ -10,71 +10,71 @@ const eventCollection = dataBase.getEventCollection()
 export const preloadAllEvents = (): void => {
     void getAllEvents()
 }
-// export const getAllEvents = async (): Promise<Event[]> => {
-//     const events = await eventCollection
-//         .aggregate<Event>([
-//             {
-//                 $sort: { date: 1 },
-//             },
-//             {
-//                 $project: {
-//                     _id: 1,
-//                     title: 1,
-//                     content: 1,
-//                     location: 1,
-//                     date: 1,
-//                     category: 1,
-//                     image: 1,
-//                 },
-//             },
-//         ])
-//         .limit(20)
-//         .toArray()
+export const getAllEvents = async (): Promise<Event[]> => {
+    const events = await eventCollection
+        .aggregate<Event>([
+            {
+                $sort: { date: 1 },
+            },
+            {
+                $project: {
+                    _id: 1,
+                    title: 1,
+                    content: 1,
+                    location: 1,
+                    date: 1,
+                    category: 1,
+                    image: 1,
+                },
+            },
+        ])
+        .limit(20)
+        .toArray()
 
-//     return events
-// }
+    return events
+}
 export const preloadEventById = (eventId: string): void => {
     void getEventById(eventId)
 }
-// export const getEventById = async (eventId: string): Promise<Event | null> => {
-//     const event = await eventCollection.findOne<Event>({
-//         _id: dataBase.createObjectId(eventId),
-//     })
-//     if (!event) return null
-//     return event
-// }
+export const getEventById = async (eventId: string): Promise<Event | null> => {
+    const event = await eventCollection.findOne<Event>({
+        _id: dataBase.createObjectId(eventId),
+    })
+    if (!event) return null
+    return event
+}
 export const preloadEventsByCategory = (category: string): void => {
     void getEventsByCategory(category)
 }
-// export async function getEventsByCategory(category: string): Promise<Event[]> {
-//     const event = await eventCollection
-//         .aggregate<Event>([
-//             {
-//                 $match: { category: category },
-//             },
-//             {
-//                 $project: {
-//                     _id: 1,
-//                     title: 1,
-//                     content: 1,
-//                     location: 1,
-//                     date: 1,
-//                     category: 1,
-//                     image: 1,
-//                     likes: 1,
-//                 },
-//             },
-//             // in here we should add the sort parameter instead of using the sortBy() from above
-//             {
-//                 sort: {
-//                     creationDate: 1,
-//                 },
-//             },
-//         ])
-//         .toArray()
+export async function getEventsByCategory(category: string): Promise<Event[]> {
+    const event = await eventCollection
+        .aggregate<Event>([
+            {
+                $match: { category: category },
+            },
+            {
+                $project: {
+                    _id: 1,
+                    title: 1,
+                    content: 1,
+                    location: 1,
+                    date: 1,
+                    category: 1,
+                    image: 1,
+                    likes: 1,
+                },
+            },
+            // in here we should add the sort parameter instead of using the sortBy() from above
+            // {
+            //     sort: {
+            //         creationDate: 1,
+            //     },
+            // },
+        ])
+        .toArray()
 
-//     return event
-// }
+    return event
+}
 
 // export async function sortEventByCategoryAndSlug(
 //     category: string,
@@ -106,119 +106,119 @@ export const preloadEventsByCategory = (category: string): void => {
 export const preloadEventComments = (eventId: string): void => {
     void getEventComments(eventId)
 }
-// export const getEventComments = async (eventId: string): Promise<Comment[]> => {
-//     const eventComments: Comment[] = await eventCollection
-//         .aggregate<Comment>([
-//             {
-//                 $match: { _id: dataBase.createObjectId(eventId) },
-//             },
-//             {
-//                 $unwind: "$comments",
-//             },
-//             {
-//                 $project: {
-//                     _id: "$comments._id",
-//                     viperId: "$comments.viperId",
-//                     text: "$comments.text",
-//                     likes: "$comments.likes",
-//                     replies: "$comments.replies",
-//                     timestamp: "$comments.timestamp",
-//                 },
-//             },
-//         ])
-//         .toArray()
-//     return eventComments
-// }
+export const getEventComments = async (eventId: string): Promise<Comment[]> => {
+    const eventComments: Comment[] = await eventCollection
+        .aggregate<Comment>([
+            {
+                $match: { _id: dataBase.createObjectId(eventId) },
+            },
+            {
+                $unwind: "$comments",
+            },
+            {
+                $project: {
+                    _id: "$comments._id",
+                    viperId: "$comments.viperId",
+                    text: "$comments.text",
+                    likes: "$comments.likes",
+                    replies: "$comments.replies",
+                    timestamp: "$comments.timestamp",
+                },
+            },
+        ])
+        .toArray()
+    return eventComments
+}
 
-// export async function getEventCommentById(
-//     eventId: string,
-//     commentId: string
-// ): Promise<Comment[] | null> {
-//     const eventComment = await eventCollection
-//         .aggregate<Comment>([
-//             {
-//                 $match: {
-//                     _id: dataBase.createObjectId(eventId),
-//                 },
-//             },
-//             {
-//                 $unwind: "$comments",
-//             },
+export async function getEventCommentById(
+    eventId: string,
+    commentId: string
+): Promise<Comment[] | null> {
+    const eventComment = await eventCollection
+        .aggregate<Comment>([
+            {
+                $match: {
+                    _id: dataBase.createObjectId(eventId),
+                },
+            },
+            {
+                $unwind: "$comments",
+            },
 
-//             {
-//                 $match: {
-//                     "comments._id": dataBase.createObjectId(commentId),
-//                 },
-//             },
+            {
+                $match: {
+                    "comments._id": dataBase.createObjectId(commentId),
+                },
+            },
 
-//             {
-//                 $project: {
-//                     _id: "$comments._id",
-//                     eventTitle: "$title",
-//                     viperId: "$comments.viperId",
-//                     text: "$comments.text",
-//                     likes: "$comments.likes",
-//                     replies: "$comments.replies",
-//                     timestamp: "$comments.timestamp",
-//                 },
-//             },
-//         ])
-//         .toArray()
-//     if (!eventComment) return null
-//     return eventComment
-// }
+            {
+                $project: {
+                    _id: "$comments._id",
+                    eventTitle: "$title",
+                    viperId: "$comments.viperId",
+                    text: "$comments.text",
+                    likes: "$comments.likes",
+                    replies: "$comments.replies",
+                    timestamp: "$comments.timestamp",
+                },
+            },
+        ])
+        .toArray()
+    if (!eventComment) return null
+    return eventComment
+}
 
-// export async function getEventCommentReplies(
-//     eventId: string,
-//     commentId: string,
-//     viperId: string
-// ): Promise<Reply[]> {
-//     const eventReplies = await dataBase
-//         .getEventCollection()
-//         .aggregate<Reply>([
-//             {
-//                 $match: {
-//                     _id: dataBase.createObjectId(eventId),
-//                 },
-//             },
-//             {
-//                 $unwind: "$comments",
-//             },
-//             {
-//                 $match: {
-//                     "comments._id": dataBase.createObjectId(commentId),
-//                     "comments.viperId": dataBase.createObjectId(viperId),
-//                 },
-//             },
-//             {
-//                 $unwind: "$comments.replies",
-//             },
-//             {
-//                 $project: {
-//                     _id: "$comments.replies._id",
-//                     viperId: "$comments.replies.viperId",
-//                     reply: "$comments.replies.reply",
-//                     likes: "$comments.replies.likes",
-//                     timestamp: "$comments.replies.timestamp",
-//                 },
-//             },
-//         ])
-//         .toArray()
+export async function getEventCommentReplies(
+    eventId: string,
+    commentId: string,
+    viperId: string
+): Promise<Reply[]> {
+    const eventReplies = await dataBase
+        .getEventCollection()
+        .aggregate<Reply>([
+            {
+                $match: {
+                    _id: dataBase.createObjectId(eventId),
+                },
+            },
+            {
+                $unwind: "$comments",
+            },
+            {
+                $match: {
+                    "comments._id": dataBase.createObjectId(commentId),
+                    "comments.viperId": dataBase.createObjectId(viperId),
+                },
+            },
+            {
+                $unwind: "$comments.replies",
+            },
+            {
+                $project: {
+                    _id: "$comments.replies._id",
+                    viperId: "$comments.replies.viperId",
+                    reply: "$comments.replies.reply",
+                    likes: "$comments.replies.likes",
+                    timestamp: "$comments.replies.timestamp",
+                },
+            },
+        ])
+        .toArray()
 
-//     return eventReplies
-// }
+    return eventReplies
+}
 
-// export const preloadIsViperOnTheList = (eventId: string, viperId: string): void => {
-//     void isViperOnTheList(eventId, viperId)
-// }
-// export const isViperOnTheList = async (eventId: string, viperId: string): Promise<boolean> => {
-//     const isParticipant = await eventCollection.findOne({
-//         _id: dataBase.createObjectId(eventId),
-//         "participants._id": dataBase.createObjectId(viperId),
-//     })
+export const preloadIsViperOnTheList = (eventId: string, viperId: string): void => {
+    void isViperOnTheList(eventId, viperId)
+}
+export const isViperOnTheList = async (eventId: string, viperId: string): Promise<boolean> => {
+    const isParticipant = await eventCollection.findOne({
+        _id: dataBase.createObjectId(eventId),
+        "participants._id": dataBase.createObjectId(viperId),
+    })
 
-//     return isParticipant ? true : false
-// }
+    return isParticipant ? true : false
+}
 
 // this is now called addParticipant
 // export const claimEventCard = async (
@@ -240,32 +240,32 @@ export const preloadEventComments = (eventId: string): void => {
 //     )
 //     return giftCard
 // }
-// export const isEventLiked = async (eventId: string, viperId: string): Promise<boolean> => {
-//     const isLiked: WithId<Event> | null = await eventCollection.findOne({
-//         _id: dataBase.createObjectId(eventId),
-//         "likes._id": dataBase.createObjectId(viperId),
-//     })
-//     return isLiked ? true : false
-// }
-// export const toggleEventLike = async (
-//     eventId: string,
-//     viperId: string,
-//     operation: "$push" | "$pull"
-// ) => {
-//     const likeEvent = await eventCollection.findOneAndUpdate(
-//         {
-//             _id: dataBase.createObjectId(eventId),
-//         },
-//         {
-//             [operation]: {
-//                 likes: {
-//                     _id: dataBase.createObjectId(viperId),
-//                 },
-//             },
-//         }
-//     )
-//     return likeEvent
-// }
+export const isEventLiked = async (eventId: string, viperId: string): Promise<boolean> => {
+    const isLiked: WithId<Event> | null = await eventCollection.findOne({
+        _id: dataBase.createObjectId(eventId),
+        "likes._id": dataBase.createObjectId(viperId),
+    })
+    return isLiked ? true : false
+}
+export const toggleEventLike = async (
+    eventId: string,
+    viperId: string,
+    operation: "$push" | "$pull"
+) => {
+    const likeEvent = await eventCollection.findOneAndUpdate(
+        {
+            _id: dataBase.createObjectId(eventId),
+        },
+        {
+            [operation]: {
+                likes: {
+                    _id: dataBase.createObjectId(viperId),
+                },
+            },
+        }
+    )
+    return likeEvent
+}
 
 // export const createEvent = async (event: CreateEvent) => {
 //     const newEvent = await eventCollection.insertOne({
@@ -323,31 +323,31 @@ export const preloadEventComments = (eventId: string): void => {
 //     return deletedEvent
 // }
 
-// export const addComment = async (
-//     eventId: string,
-//     viperId: string,
-//     comment: string
-// ): Promise<WithId<Event> | null> => {
-//     const eventComment: WithId<Event> | null = await eventCollection.findOneAndUpdate(
-//         {
-//             _id: dataBase.createObjectId(eventId),
-//         },
+export const addComment = async (
+    eventId: string,
+    viperId: string,
+    comment: string
+): Promise<WithId<Event> | null> => {
+    const eventComment: WithId<Event> | null = await eventCollection.findOneAndUpdate(
+        {
+            _id: dataBase.createObjectId(eventId),
+        },
 
-//         {
-//             $push: {
-//                 comments: {
-//                     _id: new ObjectId(),
-//                     viperId: dataBase.createObjectId(viperId),
-//                     text: comment,
-//                     likes: [],
-//                     replies: [],
-//                     timestamp: Date.now(),
-//                 },
-//             },
-//         }
-//     )
-//     return eventComment
-// }
+        {
+            $push: {
+                comments: {
+                    _id: new ObjectId(),
+                    viperId: dataBase.createObjectId(viperId),
+                    text: comment,
+                    likes: [],
+                    replies: [],
+                    timestamp: Date.now(),
+                },
+            },
+        }
+    )
+    return eventComment
+}
 
 // export const isCommentLiked = async (eventId: string, commentId: string, viperId: string) => {
 //     // Build this different, instead of an aggregation a match

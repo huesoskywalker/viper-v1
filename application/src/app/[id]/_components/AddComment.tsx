@@ -43,7 +43,7 @@ export default function AddComment({
     const submitComment = async (e: any): Promise<void> => {
         e.preventDefault()
         if (event && !reply && !blog) {
-            const eventComment = await fetch(`/api/event/comment/post`, {
+            const eventComment = await fetch(`http://localhost:3000/api/event/comment/post`, {
                 method: "POST",
                 headers: {
                     "content-type": "application/json; charset=utf-8",

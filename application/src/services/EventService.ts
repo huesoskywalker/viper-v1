@@ -1,8 +1,11 @@
 import { Comment, CreateEvent, Event, Reply, TEventRepository, UpdateEvent } from "@/types/event"
 import { DeleteResult, InsertOneResult, WithId } from "mongodb"
 
-export class EventModel {
-    constructor(private eventRepository: TEventRepository) {}
+export class EventService {
+    private eventRepository: TEventRepository
+    constructor(eventRepository: TEventRepository) {
+        this.eventRepository = eventRepository
+    }
 
     async getAll(): Promise<Event[]> {
         try {

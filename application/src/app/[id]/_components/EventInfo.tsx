@@ -20,7 +20,8 @@ export async function EventInfo({
 }: {
     currentViper: Session
     eventId: string
-    eventDate: string
+    // eventDate: string
+    eventDate: any
     eventProvince: string
     eventCountry: string
     eventPrice: number

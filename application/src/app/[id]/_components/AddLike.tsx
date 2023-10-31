@@ -46,7 +46,7 @@ export function AddLike({
     const addLike = async (): Promise<void> => {
         if (event && !reply && !blog) {
             try {
-                const response = await fetch(`/api/event/like`, {
+                const response = await fetch(`http://localhost:3000/api/event/like`, {
                     method: "POST",
                     headers: {
                         "content-type": "application/json; charset=utf-8",

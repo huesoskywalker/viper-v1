@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next"
 import { isEventLiked, toggleEventLike } from "@/lib/events"
 import { toggleLikeEvent } from "@/lib/vipers"
-import { ModifyResult, MongoError } from "mongodb"
+import { ModifyResult, MongoError, WithId } from "mongodb"
 import { Event } from "@/types/event"
 import { Viper } from "@/types/viper"
 
@@ -14,9 +14,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const operation = isLiked ? "$pull" : "$push"
 
     try {
-        const likeEvent: ModifyResult<Event> = await toggleEventLike(eventId, viperId, operation)
+        const likeEvent: WithId<Event> | null = await toggleEventLike(eventId, viperId, operation)
 
-        const viperLikeEvent: ModifyResult<Viper> = await toggleLikeEvent(
+        const viperLikeEvent: WithId<Viper> | null = await toggleLikeEvent(
             viperId,
             eventId,
             operation

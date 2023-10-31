@@ -3,6 +3,7 @@ import { Event } from "@/types/event"
 import { NextApiRequest, NextApiResponse } from "next"
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+    console.log(`------are we here ?`)
     const eventId: string | string[] | undefined = req.query._id
     try {
         if (!Array.isArray(eventId) && eventId) {

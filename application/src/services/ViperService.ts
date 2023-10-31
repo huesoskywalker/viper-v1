@@ -11,8 +11,11 @@ import {
 } from "@/types/viper"
 import { WithId } from "mongodb"
 
-export class ViperModel {
-    constructor(private viperRepository: TViperRepository) {}
+export class ViperService {
+    private viperRepository: TViperRepository
+    constructor(viperRepository: TViperRepository) {
+        this.viperRepository = viperRepository
+    }
     async getAll(): Promise<Viper[]> {
         try {
             const vipers = await this.viperRepository.getAll()

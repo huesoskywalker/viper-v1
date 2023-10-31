@@ -18,7 +18,7 @@ export async function Event({ eventId }: { eventId: string }): Promise<JSX.Eleme
     const likedCookie: string = cookies().get("_is_liked")?.value || "none"
     const viperPromise: Promise<Session | null> = getCurrentViper()
 
-    const eventPromise: Promise<Response> = fetch(`/api/event/${eventId}`, {
+    const eventPromise = fetch(`http://localhost:3000/api/event/${eventId}`, {
         method: "GET",
         headers: {
             "content-type": "application/json; charset=utf-8",
@@ -35,7 +35,7 @@ export async function Event({ eventId }: { eventId: string }): Promise<JSX.Eleme
         notFound()
     }
     const selectedEvent: Event = await selectedEventData.json()
-    // const selectedEvent = selectedEvent
+
     if (!selectedEvent) return <div className="text-yellow-400 text-sm">Build up, from Event</div>
     const viperId: string = viperSession.user._id
     preloadViperBasicProps(selectedEvent.organizer._id)
@@ -107,9 +107,9 @@ export async function Event({ eventId }: { eventId: string }): Promise<JSX.Eleme
                 <Suspense fallback={<InfoSkeleton />}>
                     {/* @ts-expect-error Async Server Component */}
                     <EventInfo
-                        currentViper={viperSession}
+                        currentViper={viperSession!}
                         eventId={eventId}
-                        eventDate={selectedEvent.date as string}
+                        eventDate={selectedEvent.date}
                         eventProvince={selectedEventAddress.province}
                         eventCountry={selectedEventAddress.country}
                         eventPrice={selectedEvent.price}
