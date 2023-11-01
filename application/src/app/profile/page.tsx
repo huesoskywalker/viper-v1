@@ -6,9 +6,8 @@ import { ViperBlogs } from "./_components/ViperBlogs"
 import { Session } from "next-auth"
 
 export default async function ProfilePage() {
-    const viperSession: Session | null = await getCurrentViper()
+    const viperSession: Session = await getCurrentViper()
 
-    if (!viperSession) throw new Error("No Viper bro")
     const viperId: string = viperSession.user._id
 
     preloadViperBlogs(viperId)

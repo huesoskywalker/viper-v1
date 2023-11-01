@@ -9,14 +9,23 @@ import {
     Viper,
     ViperBasicProps,
 } from "@/types/viper"
+import { authOptions } from "@/utils/auth"
 import { Collection, Db, ObjectId, WithId } from "mongodb"
+import { Session, getServerSession } from "next-auth"
 
 export class ViperRepository implements TViperRepository {
     private viperCollection: Collection<Viper>
+
     constructor(database: Db) {
         this.viperCollection = database.collection<Viper>("users")
     }
-    // We need to add the getServerSession()
+
+    // Since this use cookies I don't think it is a good choice to stablish a db connection
+    // async getSession(): Promise<Session | null> {
+    //     const session: Session | null = await getServerSession(authOptions)
+    //     return session
+    // }
+
     async getAll(): Promise<WithId<Viper>[]> {
         try {
             const vipers: WithId<Viper>[] = await this.viperCollection.find({}).toArray()
@@ -25,6 +34,7 @@ export class ViperRepository implements TViperRepository {
             throw new Error(`Repository Error: Failed to retrieve Vipers, ${error}`)
         }
     }
+
     async getById(viperId: string): Promise<WithId<Viper> | null> {
         try {
             const viper: WithId<Viper> | null = await this.viperCollection.findOne({
@@ -36,6 +46,7 @@ export class ViperRepository implements TViperRepository {
             throw new Error(`Repository Error: Failed to retrieve Viper by Id, ${error}`)
         }
     }
+
     async getByIdBasicProps(viperId: string): Promise<WithId<ViperBasicProps> | null> {
         try {
             const viperBasicProps: WithId<Viper> | null = await this.viperCollection.findOne(
@@ -61,6 +72,7 @@ export class ViperRepository implements TViperRepository {
             throw new Error(`Repository Error: Failed to retrieve Viper basic Props, ${error}`)
         }
     }
+
     async findByUsername(username: string): Promise<ViperBasicProps[]> {
         try {
             await this.viperCollection.createIndexes([
@@ -98,6 +110,7 @@ export class ViperRepository implements TViperRepository {
             throw new Error(`Repository Error: Failed to find Viper by Username, ${error}`)
         }
     }
+
     async update(viper: UpdateViper): Promise<WithId<Viper> | null> {
         try {
             const { _id, name, biography, image, backgroundImage, location } = viper
@@ -121,6 +134,8 @@ export class ViperRepository implements TViperRepository {
             throw new Error(`Repository Error: Failed to update Viper, ${error}`)
         }
     }
+
+    // We don't have a getFollowers?
     async getFollows(viperId: string): Promise<Follow[]> {
         try {
             const viperFollows: Follow[] = await this.viperCollection
@@ -143,6 +158,7 @@ export class ViperRepository implements TViperRepository {
             throw new Error(`Repository Error: Failed to retrieve Viper follows, ${error}`)
         }
     }
+
     async isViperFollowed(viperId: string, currentViperId: string): Promise<boolean> {
         try {
             const isFollowed: WithId<Viper> | null = await this.viperCollection.findOne(
@@ -163,6 +179,7 @@ export class ViperRepository implements TViperRepository {
             )
         }
     }
+
     async toggleFollower(
         isFollowed: boolean,
         viperId: string,
@@ -187,6 +204,7 @@ export class ViperRepository implements TViperRepository {
             throw new Error(`Repository Error: Failed to ${operation} Viper follower, ${error}`)
         }
     }
+
     async toggleCurrentFollow(
         isFollowed: boolean,
         viperId: string,
@@ -210,6 +228,7 @@ export class ViperRepository implements TViperRepository {
             throw new Error(`Repository Error: Failed to ${operation} current Follow, ${error}`)
         }
     }
+
     async getBlogs(viperId: string): Promise<Blog[]> {
         try {
             const viperBlogs: Blog[] = await this.viperCollection
@@ -241,6 +260,7 @@ export class ViperRepository implements TViperRepository {
             throw new Error(`Repository Error: Failed to retrieve Blogs, ${error}`)
         }
     }
+
     async createBlog(viperId: string, comment: string): Promise<WithId<Viper> | null> {
         try {
             const blogContent: WithId<Viper> | null = await this.viperCollection.findOneAndUpdate(
@@ -265,6 +285,7 @@ export class ViperRepository implements TViperRepository {
             throw new Error(`Repository Error: Failed to create blog, ${error}`)
         }
     }
+
     async isBlogLiked(blogId: string, viperId: string, currentViperId: string): Promise<boolean> {
         try {
             const isLiked: WithId<Viper> | null = await this.viperCollection.findOne({
@@ -285,6 +306,7 @@ export class ViperRepository implements TViperRepository {
             throw new Error(`Repository Error: Failed to check if Blog is already liked, ${error}`)
         }
     }
+
     async toggleBlogLike(
         isLiked: boolean,
         blogId: string,
@@ -310,6 +332,7 @@ export class ViperRepository implements TViperRepository {
             throw new Error(`Repository Error: Failed to ${operation} blog like , ${error}`)
         }
     }
+
     async toggleFeedLikedBlog(
         isLiked: boolean,
         blogId: string,
@@ -337,6 +360,7 @@ export class ViperRepository implements TViperRepository {
             throw new Error(`Repository Error: Failed to ${operation} liked blog, ${error}`)
         }
     }
+
     async addBlogComment(
         blogId: string,
         viperId: string,
@@ -368,6 +392,7 @@ export class ViperRepository implements TViperRepository {
             throw new Error(`Repository Error: Failed to add comment to blog, ${error}`)
         }
     }
+
     async addFeedCommentedBlog(
         blogId: string,
         viperId: string,
@@ -392,6 +417,7 @@ export class ViperRepository implements TViperRepository {
             throw new Error(`Repository Error:Failed to add commented blog into feed, ${error}`)
         }
     }
+
     async toggleLikedEvent(
         isLiked: boolean,
         eventId: string,
@@ -417,6 +443,7 @@ export class ViperRepository implements TViperRepository {
             throw new Error(`Repository Error: Failed to ${operation} Liked Event, ${error}`)
         }
     }
+
     async getLikedEvents(viperId: string): Promise<Likes[]> {
         try {
             const likedEvents: Likes[] = await this.viperCollection
@@ -464,6 +491,7 @@ export class ViperRepository implements TViperRepository {
             throw new Error(`Repository Error: Failed to retrieve Event Collection, ${error}`)
         }
     }
+
     async isEventParticipationRequested(viperId: string, eventId: string): Promise<boolean> {
         try {
             const isParticipationRequested: WithId<Viper> | null =
@@ -478,6 +506,7 @@ export class ViperRepository implements TViperRepository {
             )
         }
     }
+
     async requestEventParticipation(
         viperId: string,
         eventId: string,
@@ -527,6 +556,7 @@ export class ViperRepository implements TViperRepository {
             throw new Error(`Repository Error: Failed to add created event, ${error}`)
         }
     }
+
     async removeCreatedEvent(viperId: string, eventId: string): Promise<WithId<Viper> | null> {
         try {
             const deletedEvent = await this.viperCollection.findOneAndUpdate(
@@ -544,6 +574,7 @@ export class ViperRepository implements TViperRepository {
             throw new Error(`Repository Error: Failed to remove created event, ${error}`)
         }
     }
+
     async getCreatedEvents(viperId: string): Promise<CreatedEvent[]> {
         try {
             const createdEvents: CreatedEvent[] = await this.viperCollection

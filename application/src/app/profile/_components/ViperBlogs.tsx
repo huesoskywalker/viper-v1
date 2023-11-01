@@ -5,6 +5,7 @@ import { CustomError } from "@/error/CustomError"
 import ErrorDisplay from "@/app/_components/ErrorDisplay"
 
 export async function ViperBlogs({ viperId }: { viperId: string }): Promise<JSX.Element> {
+    // check this out. rather using an Error
     const viperBlogs: MyBlog[] | CustomError = await useViperBlogs(viperId)
 
     if (viperBlogs instanceof CustomError) {

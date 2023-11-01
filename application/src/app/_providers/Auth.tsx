@@ -1,5 +1,5 @@
 import { PageProps } from "@/lib/utils"
-import { useSession } from "next-auth/react"
+import { signIn, useSession } from "next-auth/react"
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"

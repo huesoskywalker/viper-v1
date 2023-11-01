@@ -3,6 +3,7 @@ import { DeleteResult, InsertOneResult, WithId } from "mongodb"
 
 export class EventService {
     private eventRepository: TEventRepository
+
     constructor(eventRepository: TEventRepository) {
         this.eventRepository = eventRepository
     }
@@ -15,6 +16,7 @@ export class EventService {
             throw new Error(`Model Error: Failed to get events, ${error}`)
         }
     }
+
     async getById(eventId: string): Promise<Event | null> {
         try {
             const event: Event | null = await this.eventRepository.getById(eventId)
@@ -23,6 +25,7 @@ export class EventService {
             throw new Error(`Model Error: Failed to get event by _id, ${error}`)
         }
     }
+
     async getByCategory(category: string, sortBy?: "likes" | "date") {
         try {
             const sortParam: "likes" | "date" | "creationDate" = sortBy ? sortBy : "creationDate"
@@ -32,6 +35,7 @@ export class EventService {
             throw new Error(`Model Error: Failed to get events by category, ${error}`)
         }
     }
+
     async create(event: CreateEvent): Promise<InsertOneResult<Event>> {
         try {
             const newEvent: InsertOneResult<Event> = await this.eventRepository.create(event)
@@ -40,6 +44,7 @@ export class EventService {
             throw new Error(`Model Error: Failed to create event, ${error}`)
         }
     }
+
     async update(event: UpdateEvent): Promise<WithId<Event> | null> {
         try {
             const updateEvent: WithId<Event> | null = await this.eventRepository.update(event)
@@ -48,6 +53,7 @@ export class EventService {
             throw new Error(`Model Error: Failed to update event, ${error}`)
         }
     }
+
     async delete(eventId: string, eventImage: string): Promise<DeleteResult> {
         try {
             const deleteEvent: DeleteResult = await this.eventRepository.delete(
@@ -59,6 +65,7 @@ export class EventService {
             throw new Error(`Model Error: Failed to delete event, ${error}`)
         }
     }
+
     async isLiked(eventId: string, viperId: string): Promise<boolean> {
         try {
             const isLiked: boolean = await this.eventRepository.isLiked(eventId, viperId)
@@ -67,6 +74,7 @@ export class EventService {
             throw new Error(`Model Error: Failed to check if event is liked, ${error}`)
         }
     }
+
     async toggleEventLike(
         isLiked: boolean,
         eventId: string,
@@ -83,6 +91,7 @@ export class EventService {
             throw new Error(`Model Error: Failed to toggle event like, ${error}`)
         }
     }
+
     async getComments(eventId: string): Promise<Comment[]> {
         try {
             const comments: Comment[] = await this.eventRepository.getComments(eventId)
@@ -91,6 +100,7 @@ export class EventService {
             throw new Error(`Model Error: Failed to get event comment, ${error}`)
         }
     }
+
     async getCommentsById(eventId: string, commentId: string): Promise<Comment | null> {
         try {
             const comment: Comment | null = await this.eventRepository.getCommentById(
@@ -102,6 +112,7 @@ export class EventService {
             throw new Error(`Model Error: Failed to get comment by _id, ${error}`)
         }
     }
+
     async isCommentLiked(eventId: string, commentId: string, viperId: string): Promise<boolean> {
         try {
             const isLiked: boolean = await this.eventRepository.isCommentLiked(
@@ -114,6 +125,7 @@ export class EventService {
             throw new Error(`Model Error: Failed to check if comment is liked, ${error}`)
         }
     }
+
     async toggleLikeOnComment(
         isLiked: boolean,
         eventId: string,
@@ -134,6 +146,7 @@ export class EventService {
             throw new Error(`Model Error: Failed to toggle like on comment, ${error}`)
         }
     }
+
     async addComment(
         eventId: string,
         viperId: string,
@@ -150,6 +163,7 @@ export class EventService {
             throw new Error(`Model Error: Failed to add comment, ${error}`)
         }
     }
+
     async getCommentReplies(eventId: string, commentId: string): Promise<Reply[]> {
         try {
             const replies: Reply[] = await this.eventRepository.getCommentReplies(
@@ -161,6 +175,7 @@ export class EventService {
             throw new Error(`Model Error: Failed to comment the reply, ${error}`)
         }
     }
+
     // we could change this name to isReplyLiked ?
     async isCommentReplyLiked(
         eventId: string,
@@ -180,6 +195,7 @@ export class EventService {
             throw new Error(`Model Error: Failed to check if reply is liked, ${error}`)
         }
     }
+
     // should we change this to toggleLikeOnReply?
     async toggleLikeOnCommentReply(
         isLiked: boolean,
@@ -203,6 +219,7 @@ export class EventService {
             throw new Error(`Model Error: Failed to toggle like on reply, ${error}`)
         }
     }
+
     // we could also change to addReply
     async addReplyToComment(
         eventId: string,
@@ -222,6 +239,7 @@ export class EventService {
             throw new Error(`Model Error: Failed to add reply to comment, ${error}`)
         }
     }
+
     async isViperParticipant(eventId: string, viperId: string): Promise<boolean> {
         try {
             const isParticipant: boolean = await this.eventRepository.isViperParticipant(
@@ -233,6 +251,7 @@ export class EventService {
             throw new Error(`Model Error: Failed to check if Viper is Participating, ${error}`)
         }
     }
+
     async addParticipant(eventId: string, viperId: string): Promise<WithId<Event> | null> {
         try {
             const newParticipant: WithId<Event> | null = await this.eventRepository.addParticipant(

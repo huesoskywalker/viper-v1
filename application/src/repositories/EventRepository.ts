@@ -13,9 +13,11 @@ import { _ID } from "@/types/viper"
 
 export class EventRepository implements TEventRepository {
     private eventCollection: Collection<Event>
+
     constructor(database: Db) {
         this.eventCollection = database.collection<Event>("events")
     }
+
     async getAll(): Promise<Event[]> {
         // This is kind of EventBasicProps
         // aggregate or find?
@@ -47,6 +49,7 @@ export class EventRepository implements TEventRepository {
             throw new Error(`Repository Error: Failed to get events, ${error}`)
         }
     }
+
     async getById(eventId: string): Promise<Event | null> {
         try {
             const event: Event | null = await this.eventCollection.findOne<Event>({
@@ -57,6 +60,7 @@ export class EventRepository implements TEventRepository {
             throw new Error(`Repository Error: Failed to get event by _id, ${error}`)
         }
     }
+
     async getByCategory(
         category: string,
         sortBy: "likes" | "date" | "creationDate"
@@ -109,6 +113,7 @@ export class EventRepository implements TEventRepository {
             throw new Error(`Repository Error: Failed to get events by category, ${error}`)
         }
     }
+
     async create(event: CreateEvent): Promise<InsertOneResult<Event>> {
         try {
             const newEvent: InsertOneResult<Event> = await this.eventCollection.insertOne({
@@ -135,6 +140,7 @@ export class EventRepository implements TEventRepository {
             throw new Error(`Repository Error: Failed to create event, ${error}`)
         }
     }
+
     async update(event: UpdateEvent): Promise<WithId<Event> | null> {
         try {
             const updatedEvent: WithId<Event> | null = await this.eventCollection.findOneAndUpdate(
@@ -157,6 +163,7 @@ export class EventRepository implements TEventRepository {
             throw new Error(`Repository Error: Failed to update event, ${error}`)
         }
     }
+
     async delete(eventId: string, eventImage: string): Promise<DeleteResult> {
         try {
             const deletedEvent: DeleteResult = await this.eventCollection.deleteOne({
@@ -169,6 +176,7 @@ export class EventRepository implements TEventRepository {
             throw new Error(`Repository Error: Failed to delete event, ${error}`)
         }
     }
+
     async isLiked(eventId: string, viperId: string): Promise<boolean> {
         try {
             const isLiked: _ID | null = await this.eventCollection.findOne<_ID>(
@@ -187,6 +195,7 @@ export class EventRepository implements TEventRepository {
             throw new Error(`Repository Error: Failed to check if event is liked, ${error}`)
         }
     }
+
     async toggleEventLike(
         isLiked: boolean,
         eventId: string,
@@ -217,6 +226,7 @@ export class EventRepository implements TEventRepository {
             throw new Error(`Repository Error: Failed to toggle event like, ${error}`)
         }
     }
+
     async getComments(eventId: string): Promise<Comment[]> {
         try {
             const eventComments: Comment[] = await this.eventCollection
@@ -248,6 +258,7 @@ export class EventRepository implements TEventRepository {
             throw new Error(`Repository Error: Failed to get event comment, ${error}`)
         }
     }
+
     async getCommentById(eventId: string, commentId: string): Promise<Comment | null> {
         try {
             const eventComment: Comment | null = await this.eventCollection.findOne<Comment>(
@@ -266,6 +277,7 @@ export class EventRepository implements TEventRepository {
             throw new Error(`Repository Error: Failed to get comment by _id, ${error}`)
         }
     }
+
     async isCommentLiked(eventId: string, commentId: string, viperId: string): Promise<boolean> {
         // Check with the aggregation pipeline and the unwinds if it will be more efficient
         // than this query
@@ -288,6 +300,7 @@ export class EventRepository implements TEventRepository {
             throw new Error(`Repository Error: Failed to check if comment is liked, ${error}`)
         }
     }
+
     async toggleLikeOnComment(
         isLiked: boolean,
         eventId: string,
@@ -321,6 +334,7 @@ export class EventRepository implements TEventRepository {
             throw new Error(`Repository Error: Failed to toggle like on comment, ${error}`)
         }
     }
+
     async addComment(
         eventId: string,
         viperId: string,
@@ -356,6 +370,7 @@ export class EventRepository implements TEventRepository {
             throw new Error(`Repository Error: Failed to add comment, ${error}`)
         }
     }
+
     async getCommentReplies(eventId: string, commentId: string): Promise<Reply[]> {
         try {
             const eventReplies: Reply[] = await this.eventCollection
@@ -383,6 +398,7 @@ export class EventRepository implements TEventRepository {
             throw new Error(`Repository Error: Failed to comment the reply, ${error}`)
         }
     }
+
     // we could change this name to isReplyLiked ?
     async isCommentReplyLiked(
         eventId: string,
@@ -410,6 +426,7 @@ export class EventRepository implements TEventRepository {
             throw new Error(`Repository Error: Failed to check if reply is liked, ${error}`)
         }
     }
+
     // should we change this to toggleLikeOnReply?
     async toggleLikeOnCommentReply(
         isLiked: boolean,
@@ -455,6 +472,7 @@ export class EventRepository implements TEventRepository {
             throw new Error(`Repository Error: Failed to toggle like on reply, ${error}`)
         }
     }
+
     // we could also change to addReply
     async addReplyToComment(
         eventId: string,
@@ -493,6 +511,7 @@ export class EventRepository implements TEventRepository {
             throw new Error(`Repository Error: Failed to add reply to comment, ${error}`)
         }
     }
+
     async isViperParticipant(eventId: string, viperId: string): Promise<boolean> {
         try {
             const isParticipant: _ID | null = await this.eventCollection.findOne<_ID>(
@@ -513,6 +532,7 @@ export class EventRepository implements TEventRepository {
             )
         }
     }
+
     async addParticipant(eventId: string, viperId: string): Promise<WithId<Event> | null> {
         try {
             const newParticipant: WithId<Event> | null =

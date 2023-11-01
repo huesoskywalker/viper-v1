@@ -1,5 +1,6 @@
 import { DeleteResult, ObjectId, WithId } from "mongodb"
 import { Event } from "./event"
+import { Session } from "next-auth"
 
 export type Viper = {
     readonly _id: _ID
@@ -154,6 +155,8 @@ export type UploadViperImage = {
 }
 
 interface ViperCRUDRepository {
+    // Since this use cookies I don't think it is a good choice to stablish a db connection
+    // getSession(): Promise<Session | null>
     getAll(): Promise<WithId<Viper>[]>
     getById(viperId: string): Promise<WithId<Viper> | null>
     getByIdBasicProps(viperId: string): Promise<WithId<ViperBasicProps> | null>
@@ -163,11 +166,11 @@ interface ViperCRUDRepository {
 }
 
 interface ViperFollowRepository {
-    getFollows(viperId: string): Promise<Follow[]>
     // ====================================================
     // should we add getFollowers? check if the function already
     // getFollowers(viperId: string): Promise<Follow[]>
     // =========================================
+    getFollows(viperId: string): Promise<Follow[]>
     isViperFollowed(viperId: string, currentViperId: string): Promise<boolean>
     toggleFollower(
         isFollowed: boolean,

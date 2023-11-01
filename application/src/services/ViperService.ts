@@ -13,9 +13,17 @@ import { WithId } from "mongodb"
 
 export class ViperService {
     private viperRepository: TViperRepository
+
     constructor(viperRepository: TViperRepository) {
         this.viperRepository = viperRepository
     }
+
+    // Since this use cookies I don't think it is a good choice to stablish a db connection
+    // async getSession(): Promise<Session | null> {
+    //     const session: Session | null = await this.viperRepository.getSession()
+    //     return session
+    // }
+
     async getAll(): Promise<Viper[]> {
         try {
             const vipers = await this.viperRepository.getAll()
@@ -24,6 +32,11 @@ export class ViperService {
             throw new Error(`Model Error: Failed to retrieve Vipers, ${error}`)
         }
     }
+
+    async preloadGetById(viperId: string): Promise<void> {
+        void this.getById(viperId)
+    }
+
     async getById(viperId: string): Promise<Viper | null> {
         try {
             const viper: Viper | null = await this.viperRepository.getById(viperId)
@@ -32,6 +45,11 @@ export class ViperService {
             throw new Error(`Model Error: Failed to retrieve Viper by Id ${error}`)
         }
     }
+
+    async preloadGetByIdBasicProps(viperId: string): Promise<void> {
+        void this.getByIdBasicProps(viperId)
+    }
+
     async getByIdBasicProps(viperId: string): Promise<WithId<ViperBasicProps> | null> {
         try {
             const viperBasicProps: WithId<ViperBasicProps> | null =
@@ -41,6 +59,7 @@ export class ViperService {
             throw new Error(`Model Error: Failed to retrieve Viper basic Props, ${error}`)
         }
     }
+
     async findByUsername(username: string): Promise<WithId<ViperBasicProps>[]> {
         try {
             const vipers: WithId<ViperBasicProps>[] = await this.viperRepository.findByUsername(
@@ -51,6 +70,7 @@ export class ViperService {
             throw new Error(`Model Error: Failed to find Viper by Username, ${error}`)
         }
     }
+
     async update(viper: UpdateViper): Promise<WithId<Viper> | null> {
         try {
             const updateProfile = await this.viperRepository.update(viper)
@@ -59,6 +79,7 @@ export class ViperService {
             throw new Error(`Model Error: Failed to update Viper, ${error}`)
         }
     }
+    // We don't have a getFollowers?
     async getFollows(viperId: string): Promise<Follow[]> {
         try {
             const viperFollows: Follow[] = await this.viperRepository.getFollows(viperId)
@@ -67,6 +88,7 @@ export class ViperService {
             throw new Error(`Model Error: Failed to retrieve Viper follows, ${error}`)
         }
     }
+
     async isViperFollowed(viperId: string, currentViperId: string): Promise<boolean> {
         try {
             const isFollowed: boolean = await this.viperRepository.isViperFollowed(
@@ -78,6 +100,7 @@ export class ViperService {
             throw new Error(`Model Error: Failed to check if Viper is already followed, ${error}`)
         }
     }
+
     async toggleFollow(
         isFollowed: boolean,
         viperId: string,
@@ -93,6 +116,7 @@ export class ViperService {
             throw new Error(`Model Error: Failed to toggle Follow from Viper, ${error}`)
         }
     }
+
     async getBlogs(viperId: string): Promise<Blog[]> {
         try {
             const viperBlogs: Blog[] = await this.viperRepository.getBlogs(viperId)
@@ -101,6 +125,7 @@ export class ViperService {
             throw new Error(`Model Error: Failed to retrieve Blogs, ${error}`)
         }
     }
+
     async createBlog(viperId: string, comment: string): Promise<WithId<Viper> | null> {
         try {
             const blogContent: WithId<Viper> | null = await this.viperRepository.createBlog(
@@ -112,6 +137,7 @@ export class ViperService {
             throw new Error(`Model Error: Failed to create blog, ${error}`)
         }
     }
+
     async isBlogLiked(blogId: string, viperId: string, currentViperId: string): Promise<boolean> {
         try {
             const isLiked: boolean = await this.viperRepository.isBlogLiked(
@@ -124,6 +150,7 @@ export class ViperService {
             throw new Error(`Repository Error: Failed to if Blog is already liked, ${error}`)
         }
     }
+
     async toggleBlogLike(
         isLiked: boolean,
         blogId: string,
@@ -148,6 +175,7 @@ export class ViperService {
             throw new Error(`Model Error: Failed to add like to blog or add liked blog, ${error}`)
         }
     }
+
     async addBlogComment(
         blogId: string,
         viperId: string,
@@ -166,6 +194,7 @@ export class ViperService {
             )
         }
     }
+
     async toggleLikedEvent(
         isLiked: boolean,
         eventId: string,
@@ -184,6 +213,7 @@ export class ViperService {
             throw new Error(`Model Error: Failed to toggle event like, ${error}`)
         }
     }
+
     async getLikedEvents(viperId: string): Promise<Likes[]> {
         try {
             const likedEvents: Likes[] = await this.viperRepository.getLikedEvents(viperId)
@@ -192,6 +222,7 @@ export class ViperService {
             throw new Error(`Model Error: Failed to retrieve liked Events, ${error}`)
         }
     }
+
     async getEventsCollection(viperId: string): Promise<EventCollection[]> {
         try {
             const events: EventCollection[] = await this.viperRepository.getEventsCollection(
@@ -202,6 +233,7 @@ export class ViperService {
             throw new Error(`Model Error: Failed to retrieve Event Collection, ${error}`)
         }
     }
+
     async isEventParticipationRequested(viperId: string, eventId: string): Promise<boolean> {
         try {
             const isParticipationRequested: boolean =
@@ -211,6 +243,7 @@ export class ViperService {
             throw new Error(`Model Error: Failed to check if participation is requested, ${error}`)
         }
     }
+
     async requestEventParticipation(
         viperId: string,
         eventId: string,
@@ -224,6 +257,7 @@ export class ViperService {
             throw new Error(`Model Error: Failed to request participation, ${error}`)
         }
     }
+
     async addCreatedEvent(viperId: string, eventId: string): Promise<WithId<Viper> | null> {
         // We should combine this when we create the event within the eventRepository
         // probably we won't need this method in the ViperMethod
@@ -238,6 +272,7 @@ export class ViperService {
             throw new Error(`Model Error: Failed to add created event, ${error}`)
         }
     }
+
     async removeCreatedEvent(viperId: string, eventId: string): Promise<WithId<Viper> | null> {
         // We should combine this when we delete the event within the eventRepository
         // probably we won't need this method in the ViperMethod
@@ -250,6 +285,7 @@ export class ViperService {
             throw new Error(`Model Error: Failed to remove created event, ${error}`)
         }
     }
+
     async getCreatedEvents(viperId: string): Promise<CreatedEvent[]> {
         try {
             const createdEvents: CreatedEvent[] = await this.viperRepository.getCreatedEvents(

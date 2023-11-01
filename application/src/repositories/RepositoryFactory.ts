@@ -5,7 +5,9 @@ import { EventRepository } from "./EventRepository"
 
 export class RepositoryFactory implements TRepositoryFactory {
     private static instance: RepositoryFactory
+
     private constructor() {}
+
     static getInstance(): RepositoryFactory {
         try {
             if (!this.instance) {

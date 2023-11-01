@@ -5,9 +5,11 @@ import { TMongoDBConnection } from "@/types/mongodb"
 export class MongoDBConnection implements TMongoDBConnection {
     private static instance: MongoDBConnection
     private client: MongoClient
+
     private constructor(client: MongoClient) {
         this.client = client
     }
+
     static async getInstance(): Promise<MongoDBConnection> {
         try {
             if (!this.instance) {
