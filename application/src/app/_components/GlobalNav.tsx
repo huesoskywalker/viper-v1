@@ -1,17 +1,17 @@
-'use client';
-import Link from 'next/link';
-import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/solid';
-import clsx from 'clsx';
-import { useState } from 'react';
-import { useSession, signIn, signOut } from 'next-auth/react';
-import { GlobalNavItem } from './GlobalNavItem';
-import { data } from '../../lib/getNavData';
+"use client";
+import Link from "next/link";
+import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/solid";
+import clsx from "clsx";
+import { useState } from "react";
+import { useSession, signIn, signOut } from "next-auth/react";
+import { GlobalNavItem } from "./GlobalNavItem";
+import { data } from "../../lib/getNavData";
 
 export function GlobalNav() {
   const { data: session, status } = useSession();
   const [isOpen, setIsOpen] = useState(false);
   const close = () => setIsOpen(false);
-
+  // accidentally I've removed the data-test used in cypress
   return (
     <div className="fixed top-0 z-10 flex w-full flex-col border-b border-gray-800 bg-black lg:bottom-0 lg:z-auto lg:w-40 lg:border-b-0 lg:border-r lg:border-gray-800">
       <div className="flex h-14 items-center px-4 py-4 lg:h-auto">
@@ -43,12 +43,12 @@ export function GlobalNav() {
       </button>
 
       <div
-        className={clsx('overflow-y-auto lg:static lg:block', {
-          'fixed inset-x-0 bottom-0 top-14 mt-px bg-black': isOpen,
+        className={clsx("overflow-y-auto lg:static lg:block", {
+          "fixed inset-x-0 bottom-0 top-14 mt-px bg-black": isOpen,
           hidden: !isOpen,
         })}
       >
-        {status !== 'unauthenticated' ? (
+        {status !== "unauthenticated" ? (
           <nav className="space-y-6 px-2 pb-24 pt-5">
             {data.map((item) => (
               <GlobalNavItem
@@ -57,7 +57,7 @@ export function GlobalNav() {
                 viperName={session?.user.name}
               />
             ))}
-            {session || status === 'loading' ? (
+            {session || status === "loading" ? (
               <li>
                 <Link
                   href="/"

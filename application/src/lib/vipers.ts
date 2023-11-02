@@ -1,92 +1,92 @@
-import { InsertOneResult, WithId, ObjectId } from "mongodb"
+import { InsertOneResult, WithId, ObjectId } from 'mongodb'
 import {
-    Viper,
-    // Collection,
-    Follow,
-    Blog,
-    Likes,
-    ViperBasicProps,
-    ExternalBlog,
-    // MyBlog,
-    Chats,
-    UpdateViper,
-} from "@/types/viper"
-import { getCurrentViper } from "./session"
-import { Session } from "next-auth"
-import { Event } from "@/types/event"
-import { DatabaseService } from "@/services/databaseService"
+   Viper,
+   // Collection,
+   Follow,
+   Blog,
+   Likes,
+   ViperBasicProps,
+   ExternalBlog,
+   // MyBlog,
+   Chats,
+   UpdateViper,
+} from '@/types/viper'
+import { getCurrentViper } from './session'
+import { Session } from 'next-auth'
+import { Event } from '@/types/event'
+import { DatabaseService } from '@/services/databaseService'
 
 const dataBase = await DatabaseService.init()
 const viperCollection = dataBase.getViperCollection()
 
 export const getViperByUsername = async (username: string): Promise<Viper[] | null> => {
-    try {
-        await viperCollection.createIndexes([
-            {
-                name: "someNewIndex",
-                key: { name: "text" },
+   try {
+      await viperCollection.createIndexes([
+         {
+            name: 'someNewIndex',
+            key: { name: 'text' },
+         },
+      ])
+
+      const viper: Viper[] = await viperCollection
+         .find({
+            $text: {
+               $search: username,
             },
-        ])
+         })
+         .toArray()
 
-        const viper: Viper[] = await viperCollection
-            .find({
-                $text: {
-                    $search: username,
-                },
-            })
-            .toArray()
-
-        return viper
-    } catch (error) {
-        throw new Error(`${error}`)
-    }
+      return viper
+   } catch (error) {
+      throw new Error(`${error}`)
+   }
 }
 
 export const preloadViperById = (viperId: string | ObjectId): void => {
-    void getViperById(viperId)
+   void getViperById(viperId)
 }
 export const getViperById = async (viperId: string | ObjectId): Promise<Viper | null> => {
-    if (typeof viperId === "object") return null
-    const viper = await viperCollection.findOne<Viper>({
-        _id: dataBase.createObjectId(viperId),
-    })
-    return viper
+   if (typeof viperId === 'object') return null
+   const viper = await viperCollection.findOne<Viper>({
+      _id: dataBase.createObjectId(viperId),
+   })
+   return viper
 }
 
 export const preloadViperBasicProps = (viperId: string): void => {
-    void getViperBasicProps(viperId)
+   void getViperBasicProps(viperId)
 }
 export const getViperBasicProps = async (viperId: string): Promise<ViperBasicProps | null> => {
-    try {
-        const viper = await viperCollection.findOne<Viper | null>(
-            {
-                _id: dataBase.createObjectId(viperId),
+   try {
+      const viper = await viperCollection.findOne<Viper | null>(
+         {
+            _id: dataBase.createObjectId(viperId),
+         },
+         {
+            projection: {
+               _id: 1,
+               name: 1,
+               image: 1,
+               backgroundImage: 1,
+               email: 1,
+               address: 1,
+               biography: 1,
+               followers: 1,
+               follows: 1,
             },
-            {
-                projection: {
-                    _id: 1,
-                    name: 1,
-                    image: 1,
-                    backgroundImage: 1,
-                    email: 1,
-                    address: 1,
-                    biography: 1,
-                    followers: 1,
-                    follows: 1,
-                },
-            }
-        )
-        if (!viper) throw new Error(`Bad viper id request`)
-        return viper
-    } catch (error) {
-        throw new Error(`${error}`)
-    }
+         },
+      )
+      if (!viper) throw new Error(`Bad viper id request`)
+      return viper
+   } catch (error) {
+      throw new Error(`${error}`)
+   }
 }
 
 export async function getVipers(): Promise<Viper[]> {
-    const vipers = await viperCollection.find<Viper>({}).toArray()
-    if (!vipers) throw new Error("No vipers")
-    return vipers
+   const vipers = await viperCollection.find<Viper>({}).toArray()
+   if (!vipers) throw new Error('No vipers')
+   return vipers
 }
 // export const preloadViperCollectionEvents = (viperId: string): void => {
 //     void getViperCollectionEvents(viperId)
@@ -114,137 +114,137 @@ export async function getVipers(): Promise<Viper[]> {
 
 // This will be in the api endpoint
 export const preloadViperLikedEvents = (viperId: string): void => {
-    void getViperLikedEvents(viperId)
+   void getViperLikedEvents(viperId)
 }
 export async function getViperLikedEvents(viperId: string): Promise<Likes[]> {
-    const likedEvents = await viperCollection
-        .aggregate<Likes>([
-            {
-                $match: { _id: dataBase.createObjectId(viperId) },
+   const likedEvents = await viperCollection
+      .aggregate<Likes>([
+         {
+            $match: { _id: dataBase.createObjectId(viperId) },
+         },
+         {
+            $unwind: '$myEvents.likes',
+         },
+         {
+            $project: {
+               _id: '$myEvents.likes._id',
             },
-            {
-                $unwind: "$myEvents.likes",
-            },
-            {
-                $project: {
-                    _id: "$myEvents.likes._id",
-                },
-            },
-        ])
-        .toArray()
-    return likedEvents
+         },
+      ])
+      .toArray()
+   return likedEvents
 }
 
 export async function getViperFollows(id: string): Promise<Follow[]> {
-    const viperFollows = await viperCollection
-        .aggregate<Follow>([
-            {
-                $match: { _id: dataBase.createObjectId(id) },
+   const viperFollows = await viperCollection
+      .aggregate<Follow>([
+         {
+            $match: { _id: dataBase.createObjectId(id) },
+         },
+         {
+            $unwind: '$follows',
+         },
+         {
+            $project: {
+               _id: '$follows._id',
             },
-            {
-                $unwind: "$follows",
-            },
-            {
-                $project: {
-                    _id: "$follows._id",
-                },
-            },
-        ])
-        .toArray()
-    return viperFollows
+         },
+      ])
+      .toArray()
+   return viperFollows
 }
 
 export const preloadViperFollowed = (viperId: string): void => {
-    void getViperFollowById(viperId)
+   void getViperFollowById(viperId)
 }
 export const getViperFollowById = async (viperId: string): Promise<boolean> => {
-    const viperSession: Session | null = await getCurrentViper()
-    if (!viperSession) throw new Error("No Viper bro")
+   const viperSession: Session | null = await getCurrentViper()
+   if (!viperSession) throw new Error('No Viper bro')
 
-    const viperFollower = await viperCollection.findOne({
-        _id: dataBase.createObjectId(viperId),
-        "followers._id": dataBase.createObjectId(viperSession.user._id),
-    })
-    if (!viperFollower) return false
-    return true
+   const viperFollower = await viperCollection.findOne({
+      _id: dataBase.createObjectId(viperId),
+      'followers._id': dataBase.createObjectId(viperSession.user._id),
+   })
+   if (!viperFollower) return false
+   return true
 }
 
 export const preloadIsViperParticipationRequest = (viperId: string, eventId: string): void => {
-    void isViperParticipationRequest(viperId, eventId)
+   void isViperParticipationRequest(viperId, eventId)
 }
 export async function isViperParticipationRequest(
-    viperId: string,
-    eventId: string
+   viperId: string,
+   eventId: string,
 ): Promise<boolean> {
-    try {
-        const request = await viperCollection.findOne({
-            _id: dataBase.createObjectId(viperId),
-            "myEvents.collection._id": dataBase.createObjectId(eventId),
-        })
+   try {
+      const request = await viperCollection.findOne({
+         _id: dataBase.createObjectId(viperId),
+         'myEvents.collection._id': dataBase.createObjectId(eventId),
+      })
 
-        if (!request) return false
-        return true
-    } catch (error) {
-        throw new Error("Error en requestEventParticipation")
-    }
+      if (!request) return false
+      return true
+   } catch (error) {
+      throw new Error('Error en requestEventParticipation')
+   }
 }
 
 export const preloadViperBlogs = (viperId: string): void => {
-    void getViperBlogs(viperId)
+   void getViperBlogs(viperId)
 }
 
 export const getViperBlogs = async (viperId: string): Promise<Blog[]> => {
-    try {
-        const viperBlogs: Blog[] = await dataBase
-            .getViperCollection()
-            .aggregate<Blog>([
-                {
-                    $match: {
-                        _id: dataBase.createObjectId(viperId),
-                    },
-                },
-                {
-                    $unwind: "$blog",
-                },
-                { $unwind: "$blog.myBlog" },
-                {
-                    $project: {
-                        _id: "$blog.myBlog._id",
-                        content: "$blog.myBlog.content",
-                        likes: "$blog.myBlog.likes",
-                        comments: "$blog.myBlog.comments",
-                        rePosts: "$blog.myBlog.rePosts",
-                        timestamp: "$blog.myBlog.timestamp",
-                    },
-                },
+   try {
+      const viperBlogs: Blog[] = await dataBase
+         .getViperCollection()
+         .aggregate<Blog>([
+            {
+               $match: {
+                  _id: dataBase.createObjectId(viperId),
+               },
+            },
+            {
+               $unwind: '$blog',
+            },
+            { $unwind: '$blog.myBlog' },
+            {
+               $project: {
+                  _id: '$blog.myBlog._id',
+                  content: '$blog.myBlog.content',
+                  likes: '$blog.myBlog.likes',
+                  comments: '$blog.myBlog.comments',
+                  rePosts: '$blog.myBlog.rePosts',
+                  timestamp: '$blog.myBlog.timestamp',
+               },
+            },
 
-                { $sort: { timestamp: 1 } },
-            ])
-            .toArray()
-        return viperBlogs
-    } catch (error) {
-        throw new Error(`Error getViperBlogs`)
-    }
+            { $sort: { timestamp: 1 } },
+         ])
+         .toArray()
+      return viperBlogs
+   } catch (error) {
+      throw new Error(`Error getViperBlogs`)
+   }
 }
 
 export const preloadViperCreatedEvents = (viperId: string): void => {
-    void getViperCreatedEvents(viperId)
+   void getViperCreatedEvents(viperId)
 }
 export const getViperCreatedEvents = async (viperId: string): Promise<Event[] | undefined> => {
-    // In this one we should check how to manage it better.
-    // and also we should place the getEventCollection to the EVENT RE POSITORY
-    const fullViper = await getViperById(viperId)
-    const eventsId = fullViper?.myEvents.created.map((event) => {
-        return dataBase.createObjectId(JSON.stringify(event._id))
-    })
-    if (!eventsId) throw new Error("no EventsId bro")
-    const events = await dataBase
-        .getEventCollection()
-        .find({ _id: { $in: eventsId } })
-        .sort({ creationDate: -1 })
-        .toArray()
+   // In this one we should check how to manage it better.
+   // and also we should place the getEventCollection to the EVENT RE POSITORY
+   const fullViper = await getViperById(viperId)
+   const eventsId = fullViper?.myEvents.created.map((event) => {
+      return dataBase.createObjectId(JSON.stringify(event._id))
+   })
+   if (!eventsId) throw new Error('no EventsId bro')
+   const events = await dataBase
+      .getEventCollection()
+      .find({ _id: { $in: eventsId } })
+      .sort({ creationDate: -1 })
+      .toArray()
 
-    return events
+   return events
 }
 
 // export const createBlog = async (viperId: string, comment: string): Promise<WithId<Viper>> => {
@@ -460,23 +460,23 @@ export const getViperCreatedEvents = async (viperId: string): Promise<Event[] | 
 // }
 
 export const toggleLikeEvent = async (
-    viperId: string,
-    eventId: string,
-    operation: "$push" | "$pull"
+   viperId: string,
+   eventId: string,
+   operation: '$push' | '$pull',
 ) => {
-    const eventLike = await viperCollection.findOneAndUpdate(
-        {
-            _id: dataBase.createObjectId(viperId),
-        },
-        {
-            [operation]: {
-                "myEvents.likes": {
-                    _id: dataBase.createObjectId(eventId),
-                },
+   const eventLike = await viperCollection.findOneAndUpdate(
+      {
+         _id: dataBase.createObjectId(viperId),
+      },
+      {
+         [operation]: {
+            'myEvents.likes': {
+               _id: dataBase.createObjectId(eventId),
             },
-        }
-    )
-    return eventLike
+         },
+      },
+   )
+   return eventLike
 }
 
 // export const addOrganizedEvent = async (viperId: string, eventId: string) => {
