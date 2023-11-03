@@ -1,6 +1,6 @@
-import React from "react"
+import React from 'react'
 
 export interface PageProps {
-    params?: any
-    children?: React.ReactNode
+   children?: React.ReactNode
+   params?: any
 }

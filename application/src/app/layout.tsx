@@ -2,6 +2,12 @@ import './globals.css'
 import type { ReactNode } from 'react'
 import AuthProvider from './_providers/AuthProvider'
 import { GlobalNav } from './_components/GlobalNav'
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+   title: 'Viper',
+   description: 'The best application to find events and schedule your week with fun',
+}
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
    return (

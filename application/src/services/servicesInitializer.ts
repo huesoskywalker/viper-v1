@@ -4,8 +4,8 @@ import { EventService } from '@/services/EventService'
 import { ViperService } from '@/services/ViperService'
 import { PreloadViperService } from './PreloadViperService'
 
-const database = await MongoDBConnection.getInstance()
-const viperDb = database.getViperDatabase()
+const database = MongoDBConnection.getInstance()
+const viperDb = await database.getViperDatabase()
 
 const factoryInstance = RepositoryFactory.getInstance()
 
